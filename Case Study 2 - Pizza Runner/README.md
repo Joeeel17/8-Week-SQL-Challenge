@@ -29,4 +29,4 @@ There are some known data issues with few tables. Data cleaning was performed an
 - In the cancellation column, there are blank spaces and null values.
 
 ## Entity Relationship Diagram
-![alt text]()
+![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%202%20-%20Pizza%20Runner/ERD.JPG)
