@@ -12,3 +12,6 @@ Three key datasets for this case study
 - <strong>Sales</strong>: The sales table captures all customer_id level purchases with an corresponding order_date and product_id information for when and what menu items were ordered.
 - <strong>Menu</strong>: The menu table maps the product_id to the actual product_name and price of each menu item.
 - <strong>Members</strong>: The members table captures the join_date when a customer_id joined the beta version of the Danny’s Diner loyalty program.
+
+## Entity Relationship Diagram
+![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%201%20-%20Danny's%20Diner/ERD.jpg)
