@@ -1,5 +1,7 @@
 /* 
-	Case Study Questions 
+ * Danny's Diner
+ * Case Study #1 Questions
+ *  
 */
 
 -- 1. What is the total amount each customer spent at the restaurant?
