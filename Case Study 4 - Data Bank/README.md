@@ -18,4 +18,4 @@ Key datasets for this case study
 - **customer_transactions** : This table stores all customer deposits, withdrawals and purchases made using their Data Bank debit card.
 
 ## Entity Relationship Diagram
-![alt text]()
+![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%204%20-%20Data%20Bank/ERD.JPG)
