@@ -105,5 +105,58 @@ rounded_up|avg_days|rounded_down|
         15|    14.6|          14|
         
 -- 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region?
+
+WITH perc_reallocation AS (        
+	SELECT
+		region_name,
+		PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY end_date - start_date) AS "50th_perc",
+		PERCENTILE_CONT(0.8) WITHIN GROUP(ORDER BY end_date - start_date) AS "80th_perc",
+		PERCENTILE_CONT(0.95) WITHIN GROUP(ORDER BY end_date - start_date) AS "95th_perc"
+	FROM
+		(
+		SELECT
+			r.region_name,
+			cn.customer_id,
+			cn.node_id,
+			cn.start_date,
+			cn.end_date,
+			LAG(cn.node_id) OVER (PARTITION BY cn.customer_id ORDER BY cn.start_date) AS prev_node
+		FROM
+			customer_nodes AS cn
+		JOIN regions AS r
+		ON r.region_id = cn.region_id
+		WHERE 
+			EXTRACT(YEAR FROM cn.end_date) != '9999'
+		ORDER BY
+			cn.customer_id,
+			cn.start_date) AS tmp
+	WHERE
+		prev_node != node_id 
+	GROUP BY 
+		region_name
+)
+
+SELECT
+	region_name,
+	ceil("50th_perc") AS median,
+	ceil("80th_perc") AS "80th_percentile",
+	ceil("95th_perc") AS "95th_percentile"
+FROM
+	perc_reallocation
+        
+-- Results:
+
+region_name|median|80th_percentile|95th_percentile|
+-----------+------+---------------+---------------+
+Africa     |  15.0|           23.0|           28.0|
+America    |  15.0|           23.0|           27.0|
+Asia       |  14.0|           23.0|           27.0|
+Australia  |  16.0|           23.0|           28.0|
+Europe     |  15.0|           24.0|           28.0|
+        
+        
+        
+        
+        
         
     
