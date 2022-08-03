@@ -106,41 +106,43 @@ rounded_up|avg_days|rounded_down|
         
 -- 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region?
 
-WITH perc_reallocation AS (        
-	SELECT
+WITH perc_reallocation AS (
+SELECT
 		region_name,
 		PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY end_date - start_date) AS "50th_perc",
 		PERCENTILE_CONT(0.8) WITHIN GROUP(ORDER BY end_date - start_date) AS "80th_perc",
 		PERCENTILE_CONT(0.95) WITHIN GROUP(ORDER BY end_date - start_date) AS "95th_perc"
-	FROM
+FROM
 		(
-		SELECT
+	SELECT
 			r.region_name,
 			cn.customer_id,
 			cn.node_id,
 			cn.start_date,
 			cn.end_date,
 			LAG(cn.node_id) OVER (PARTITION BY cn.customer_id ORDER BY cn.start_date) AS prev_node
-		FROM
+	FROM
 			customer_nodes AS cn
-		JOIN regions AS r
-		ON r.region_id = cn.region_id
-		WHERE 
-			EXTRACT(YEAR FROM cn.end_date) != '9999'
-		ORDER BY
+	JOIN regions AS r
+		ON
+		r.region_id = cn.region_id
+	WHERE 
+			EXTRACT(YEAR
+	FROM
+		cn.end_date) != '9999'
+	ORDER BY
 			cn.customer_id,
 			cn.start_date) AS tmp
-	WHERE
-		prev_node != node_id 
-	GROUP BY 
+WHERE
+		prev_node != node_id
+GROUP BY 
 		region_name
 )
-
 SELECT
 	region_name,
-	ceil("50th_perc") AS median,
-	ceil("80th_perc") AS "80th_percentile",
-	ceil("95th_perc") AS "95th_percentile"
+	CEIL("50th_perc") AS median,
+	CEIL("80th_perc") AS "80th_percentile",
+	CEIL("95th_perc") AS "95th_percentile"
 FROM
 	perc_reallocation
         
@@ -177,7 +179,7 @@ SELECT
 			WHEN txn_type = 'purchase' THEN 1
 			WHEN txn_type = 'withdrawal' THEN 1
 			WHEN txn_type = 'deposit' THEN 1
-			ELSE null
+			ELSE NULL
 		END 
 	) AS transaction_count,
 	sum(
@@ -190,7 +192,8 @@ SELECT
 	) AS total_transactions
 FROM
 	customer_transactions
-GROUP BY transaction_type
+GROUP BY
+	transaction_type
 	
 -- Results:
 
@@ -205,13 +208,16 @@ withdrawal      |             1580|            793003|
 SELECT
 	round(avg(deposits_count)) AS avg_deposit_count,
 	round(avg(total_deposit_amount)) AS avg_deposit_amount
-from
-	(SELECT
+FROM
+	(
+	SELECT
 		customer_id,
 		count(*) AS deposits_count,
 		avg(txn_amount) AS total_deposit_amount
-	FROM customer_transactions
-	WHERE txn_type = 'deposit'
+	FROM
+		customer_transactions
+	WHERE
+		txn_type = 'deposit'
 	GROUP BY
 		customer_id) AS tmp
 
@@ -226,37 +232,42 @@ avg_deposit_count|avg_deposit_amount|
 SELECT
 	transaction_month,
 	count(customer_id) AS customer_count
-from
-	(SELECT
+FROM
+	(
+	SELECT
 		DISTINCT customer_id,
 		date_part('month', txn_date) AS transaction_month,
 		count(
 			CASE
 				WHEN txn_type = 'purchase' THEN 1
-				ELSE null
+				ELSE NULL
 			END  
 		) AS purchase_count,
 		count(
 			CASE
 				WHEN txn_type = 'withdrawal' THEN 1
-				ELSE null
+				ELSE NULL
 			END  
 		) AS withdrawal_count,
 		count(
 			CASE
 				WHEN txn_type = 'deposit' THEN 1
-				ELSE null
+				ELSE NULL
 			END  
 		) AS deposit_count
-	FROM customer_transactions
+	FROM
+		customer_transactions
 	GROUP BY
 		customer_id,
 		transaction_month) AS tmp
-WHERE deposit_count > 1
-AND (purchase_count >= 1
-OR withdrawal_count >= 1)
-GROUP BY transaction_month
-ORDER BY transaction_month
+WHERE
+	deposit_count > 1
+	AND (purchase_count >= 1
+		OR withdrawal_count >= 1)
+GROUP BY
+	transaction_month
+ORDER BY
+	transaction_month
 
 -- Results:
 
@@ -269,7 +280,7 @@ transaction_month|customer_count|
               
 -- 4. What is the closing balance for each customer at the end of the month?
 
-WITH deposits AS (
+/*WITH deposits AS (
 	SELECT
 		DISTINCT customer_id,
 		date_part('month', txn_date) AS month,
@@ -301,6 +312,6 @@ SELECT
 FROM deposits AS d
 ORDER BY 
 	d.customer_id,
-	d.month
+	d.month*/
 
     
