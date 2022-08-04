@@ -286,9 +286,10 @@ SELECT
 	customer_id,
 	current_month,
 	transaction_amount,
-	sum(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month ROWS BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS closing_balance
-from
-	(SELECT
+	sum(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance
+FROM
+	(
+	SELECT
 		customer_id,
 		to_char(txn_date, 'Month') AS current_month,
 		txn_type,
@@ -298,14 +299,17 @@ from
 				ELSE -txn_amount
 			END
 		) AS transaction_amount
-	FROM customer_transactions
+	FROM
+		customer_transactions
 	GROUP BY
 		customer_id,
 		current_month,
 		txn_type
-	ORDER by customer_id) AS tmp
+	ORDER BY
+		customer_id) AS tmp
 ORDER BY
-	customer_id, to_date(current_month, 'Month')
+	customer_id,
+	to_date(current_month, 'Month')
 LIMIT 15
   
 -- Results:
@@ -330,7 +334,6 @@ customer_id|current_month|transaction_amount|closing_balance|
 
 
 -- 5. What is the percentage of customers who increase their closing balance by more than 5%?
-
 
 
 
