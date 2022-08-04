@@ -285,8 +285,8 @@ April        |            50|
 SELECT
 	customer_id,
 	current_month,
-	transaction_amount,
-	sum(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance
+	transaction_amount
+	/*sum(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)*/  
 FROM
 	(
 	SELECT
@@ -304,9 +304,14 @@ FROM
 	GROUP BY
 		customer_id,
 		current_month,
-		txn_type
+		txn_type,
+		txn_date
 	ORDER BY
-		customer_id) AS tmp
+		customer_id, txn_date) AS tmp
+GROUP BY 
+	customer_id,
+	current_month,
+	transaction_amount
 ORDER BY
 	customer_id,
 	to_date(current_month, 'Month')
