@@ -281,37 +281,53 @@ April        |            50|
 
 -- 4. What is the closing balance for each customer at the end of the month?
 -- Limit 15 as a sample
+DROP TABLE IF EXISTS closing_balance;
+CREATE TEMP TABLE closing_balance AS 
+	(SELECT
+		customer_id,
+		current_month,
+		transaction_amount,
+		txn_type,
+		lag(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month) AS prev_trans,
+		row_number() OVER (PARTITION BY customer_id) AS rn
+	FROM
+		(
+		SELECT
+			customer_id,
+			to_char(txn_date, 'Month') AS current_month,
+			txn_type,
+			sum(
+				CASE 
+					WHEN txn_type = 'deposit' THEN txn_amount
+					ELSE -txn_amount
+				END
+			) AS transaction_amount
+		FROM
+			customer_transactions
+		GROUP BY
+			customer_id,
+			current_month,
+			txn_type,
+			txn_date
+		ORDER BY
+			customer_id, txn_date) AS tmp
+	ORDER BY
+		customer_id,
+		to_date(current_month, 'Month'));
 
 SELECT
 	customer_id,
 	current_month,
 	transaction_amount,
-	sum(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance
-FROM
-	(
-	SELECT
-		customer_id,
-		to_char(txn_date, 'Month') AS current_month,
-		txn_type,
-		sum(
-			CASE 
-				WHEN txn_type = 'deposit' THEN txn_amount
-				ELSE -txn_amount
-			END
-		) AS transaction_amount
-	FROM
-		customer_transactions
-	GROUP BY
-		customer_id,
-		current_month,
-		txn_type,
-		txn_date
-	ORDER BY
-		customer_id, txn_date) AS tmp
-ORDER BY
-	customer_id,
-	to_date(current_month, 'Month')
-LIMIT 15
+	prev_trans,
+	rn,
+	sum(
+		CASE
+			WHEN txn_type = 'deposit' THEN transaction_amount
+			ELSE -transaction_amount
+		END 
+	) AS monthly_balance
+FROM closing_balance
   
 -- Results:
 
