@@ -280,7 +280,6 @@ April        |            50|
 
 
 -- 4. What is the closing balance for each customer at the end of the month?
--- Limit 15 as a sample
 DROP TABLE IF EXISTS closing_balance;
 CREATE TEMP TABLE closing_balance AS 
 	(SELECT
@@ -289,7 +288,7 @@ CREATE TEMP TABLE closing_balance AS
 		transaction_amount,
 		txn_type,
 		lag(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month) AS prev_trans,
-		row_number() OVER (PARTITION BY customer_id) AS rn
+		row_number() OVER (PARTITION BY customer_id, current_month) AS rn1
 	FROM
 		(
 		SELECT
@@ -328,7 +327,14 @@ SELECT
 		END 
 	) AS monthly_balance
 FROM closing_balance
-  
+GROUP BY 
+	customer_id,
+	current_month,
+	transaction_amount,
+	prev_trans,
+	rn
+ORDER BY customer_id, rn, to_date(current_month, 'Month')
+	
 -- Results:
 
 customer_id|current_month|transaction_amount|closing_balance|
