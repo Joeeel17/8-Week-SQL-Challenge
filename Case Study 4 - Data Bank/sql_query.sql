@@ -280,82 +280,37 @@ April        |            50|
 
 
 -- 4. What is the closing balance for each customer at the end of the month?
-DROP TABLE IF EXISTS closing_balance;
-CREATE TEMP TABLE closing_balance AS 
-	(SELECT
-		customer_id,
-		current_month,
-		transaction_amount,
-		txn_type,
-		lag(transaction_amount) OVER (PARTITION BY customer_id ORDER BY current_month) AS prev_trans,
-		row_number() OVER (PARTITION BY customer_id, current_month) AS rn1
-	FROM
-		(
-		SELECT
-			customer_id,
-			to_char(txn_date, 'Month') AS current_month,
-			txn_type,
-			sum(
-				CASE 
-					WHEN txn_type = 'deposit' THEN txn_amount
-					ELSE -txn_amount
-				END
-			) AS transaction_amount
-		FROM
-			customer_transactions
-		GROUP BY
-			customer_id,
-			current_month,
-			txn_type,
-			txn_date
-		ORDER BY
-			customer_id, txn_date) AS tmp
-	ORDER BY
-		customer_id,
-		to_date(current_month, 'Month'));
 
+DROP TABLE IF EXISTS closing_balance;
+
+CREATE TEMP TABLE closing_balance AS (
 SELECT
 	customer_id,
-	current_month,
-	transaction_amount,
-	prev_trans,
-	rn,
-	sum(
+	txn_amount,
+	date_part('Month', txn_date) AS txn_month,
+	SUM(
 		CASE
-			WHEN txn_type = 'deposit' THEN transaction_amount
-			ELSE -transaction_amount
-		END 
-	) AS monthly_balance
-FROM closing_balance
-GROUP BY 
+        	WHEN txn_type = "deposit" THEN txn_amount
+        	ELSE -txn_amount
+              
+		END
+	) AS transaction_amount
+FROM
+	customer_transactions
+GROUP BY
 	customer_id,
-	current_month,
-	transaction_amount,
-	prev_trans,
-	rn
-ORDER BY customer_id, rn, to_date(current_month, 'Month')
-	
--- Results:
-
-customer_id|current_month|transaction_amount|closing_balance|
------------+-------------+------------------+---------------+
-          1|January      |               312|            312|
-          1|March        |             -1276|           -964|
-          1|March        |               324|           -640|
-          2|January      |               549|            549|
-          2|March        |                61|            610|
-          3|January      |               144|           -328|
-          3|February     |              -965|           -472|
-          3|March        |              -401|           -729|
-          3|April        |               493|            493|
-          4|January      |               848|            848|
-          4|March        |              -193|            655|
-          5|January      |              -826|          -1316|
-          5|January      |              1780|            464|
-          5|March        |              1130|          -2413|
-          5|March        |             -1486|          -1022|
+	txn_month
+ORDER BY
+	customer_id
+);
 
 
+SELECT customer_id,
+       txn_month,
+       net_transaction_amt,
+       sum(net_transaction_amt) over(PARTITION BY customer_id
+                                     ORDER BY txn_month ROWS BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS closing_balance
+FROM txn_monthly_balance_cte;
 -- 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
 
