@@ -290,7 +290,7 @@ SELECT
 	date_part('Month', txn_date) AS txn_month,
 	SUM(
 		CASE
-        	WHEN txn_type = "deposit" THEN txn_amount
+        	WHEN txn_type = 'deposit' THEN txn_amount
         	ELSE -txn_amount
               
 		END
@@ -299,18 +299,30 @@ FROM
 	customer_transactions
 GROUP BY
 	customer_id,
-	txn_month
+	txn_month,
+	txn_amount
 ORDER BY
 	customer_id
 );
 
 
-SELECT customer_id,
-       txn_month,
-       net_transaction_amt,
-       sum(net_transaction_amt) over(PARTITION BY customer_id
-                                     ORDER BY txn_month ROWS BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS closing_balance
-FROM txn_monthly_balance_cte;
+SELECT 
+	customer_id,
+	txn_month,
+	transaction_amount,
+	closing_balance
+from
+	(SELECT customer_id,
+	       txn_month,
+	       transaction_amount,
+	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS closing_balance,
+	       row_number() OVER (PARTITION BY customer_id, txn_month ORDER BY txn_month desc) AS rn
+	FROM closing_balance
+	ORDER BY 
+		customer_id,
+		txn_month) AS tmp
+WHERE rn = 1
+	
 -- 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
 
