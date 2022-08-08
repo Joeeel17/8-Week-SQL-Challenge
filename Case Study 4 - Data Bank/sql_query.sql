@@ -322,6 +322,27 @@ from
 		customer_id,
 		txn_month) AS tmp
 WHERE rn = 1
+LIMIT 15;
+
+-- Results:  Limiting to the first 15 results...
+
+customer_id|txn_month|transaction_amount|closing_balance|
+-----------+---------+------------------+---------------+
+          1|      1.0|               312|            312|
+          1|      3.0|               324|           -640|
+          2|      1.0|               549|            549|
+          2|      3.0|                61|            610|
+          3|      1.0|               144|            144|
+          3|      2.0|              -965|           -821|
+          3|      3.0|              -188|          -1009|
+          3|      4.0|               493|           -729|
+          4|      1.0|               390|            390|
+          4|      3.0|              -193|            655|
+          5|      1.0|               806|           1780|
+          5|      3.0|               412|          -1923|
+          5|      4.0|              -490|          -2413|
+          6|      1.0|               796|           1627|
+          6|      2.0|              -169|            -52|
 	
 -- 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
