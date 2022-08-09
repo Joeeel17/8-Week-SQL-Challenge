@@ -4,7 +4,9 @@
  *  
 */
 
--- 1. Data Cleansing Steps
+/*
+	1. Data Cleansing Steps
+*/
 
 -- Lets take a look at the first 10 records to see what we have.
 
@@ -28,7 +30,24 @@ week_date|region|platform|segment|customer_type|transactions|sales   |
 
 -- In a single query, perform the following operations and generate a new table in the data_mart schema named clean_weekly_sales:
 -- Step 1. Convert the week_date to a DATE format.
+-- Step 2. Add a week_number as the second column for each week_date value, for example any value from the 1st of January to 7th of January will be 1, 8th to 14th will be 2 etc...
+-- Step 3. Add a month_number with the calendar month for each week_date value as the 3rd column.
+-- Step 4. Add a calendar_year column as the 4th column containing either 2018, 2019 or 2020 values.
+-- Step 5. Add a new column called age_band after the original segment column using the following mapping on the number inside the segment value
+--
+--segment	age_band
+-- 1	Young Adults
+-- 2	Middle Aged
+-- 3 or 4	Retirees
 
+-- Step 6. Add a new demographic column using the following mapping for the first letter in the segment values:
+--
+-- segment	demographic
+--   C	     Couples
+--   F	     Families
+
+-- Step 7. Ensure all null string values with an "unknown" string value in the original segment column as well as the new age_band and demographic columns.
+-- Step 8. Generate a new avg_transaction column as the sales value divided by transactions rounded to 2 decimal places for each record.
 
 DROP TABLE IF EXISTS clean_weekly_sales;
 CREATE TEMP TABLE clean_weekly_sales AS (
@@ -81,7 +100,22 @@ week_day  |week_number|month_number|calendar_year|region|platform|segment|age_ba
 2020-08-31|       36.0|         8.0|       2020.0|AFRICA|Retail  |C3     |Retirees    |Couples     |      111032| 3888162|               35.00|
 
 
+/*
+	2. Data Exploration
+*/
 
+-- 1. What day of the week is used for each week_date value?
+
+SELECT
+	DISTINCT date_part('dow', week_day) AS day_of_week,
+	to_char(week_day, 'Day') AS day_of_week_name
+FROM clean_weekly_sales;
+
+-- Results:
+
+day_of_week|day_of_week_name|
+-----------+----------------+
+        1.0|Monday          |
 
 
 
