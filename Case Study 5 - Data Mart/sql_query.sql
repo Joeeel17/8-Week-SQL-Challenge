@@ -30,7 +30,10 @@ week_date|region|platform|segment|customer_type|transactions|sales   |
 -- Step 1. Convert the week_date to a DATE format.
 
 
+DROP TABLE IF EXISTS clean_weekly_sales;
+CREATE TEMP TABLE clean_weekly_sales AS (
 
+)
 
 
 
