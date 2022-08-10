@@ -55,9 +55,9 @@ SELECT
 	-- We must not only convert to date type, we must also change the datestyle
 	-- or we get  'ERROR: date/time field value out of range'
 	to_date(week_date, 'dd/mm/yy') AS week_day,
-	date_part('week', to_date(week_date, 'dd/mm/yy')) AS week_number,
-	date_part('month', to_date(week_date, 'dd/mm/yy')) AS month_number,
-	date_part('year', to_date(week_date, 'dd/mm/yy')) AS calendar_year,
+	date_part('week', to_date(week_date, 'dd/mm/yy'))::int AS week_number,
+	date_part('month', to_date(week_date, 'dd/mm/yy'))::int AS month_number,
+	date_part('year', to_date(week_date, 'dd/mm/yy'))::int AS calendar_year,
 	region,
 	platform,
 	CASE 
@@ -88,16 +88,16 @@ LIMIT 10;
 
 week_day  |week_number|month_number|calendar_year|region|platform|segment|age_band    |demographics|transactions|sales   |average_transactions|
 ----------+-----------+------------+-------------+------+--------+-------+------------+------------+------------+--------+--------------------+
-2020-08-31|       36.0|         8.0|       2020.0|ASIA  |Retail  |C3     |Retirees    |Couples     |      120631| 3656163|               30.00|
-2020-08-31|       36.0|         8.0|       2020.0|ASIA  |Retail  |F1     |Young Adults|Families    |       31574|  996575|               31.00|
-2020-08-31|       36.0|         8.0|       2020.0|USA   |Retail  |null   |unknown     |unknown     |      529151|16509610|               31.00|
-2020-08-31|       36.0|         8.0|       2020.0|EUROPE|Retail  |C1     |Young Adults|Couples     |        4517|  141942|               31.00|
-2020-08-31|       36.0|         8.0|       2020.0|AFRICA|Retail  |C2     |Middle Aged |Couples     |       58046| 1758388|               30.00|
-2020-08-31|       36.0|         8.0|       2020.0|CANADA|Shopify |F2     |Middle Aged |Families    |        1336|  243878|              182.00|
-2020-08-31|       36.0|         8.0|       2020.0|AFRICA|Shopify |F3     |Retirees    |Families    |        2514|  519502|              206.00|
-2020-08-31|       36.0|         8.0|       2020.0|ASIA  |Shopify |F1     |Young Adults|Families    |        2158|  371417|              172.00|
-2020-08-31|       36.0|         8.0|       2020.0|AFRICA|Shopify |F2     |Middle Aged |Families    |         318|   49557|              155.00|
-2020-08-31|       36.0|         8.0|       2020.0|AFRICA|Retail  |C3     |Retirees    |Couples     |      111032| 3888162|               35.00|
+2020-08-31|         36|           8|         2020|ASIA  |Retail  |C3     |Retirees    |Couples     |      120631| 3656163|               30.00|
+2020-08-31|         36|           8|         2020|ASIA  |Retail  |F1     |Young Adults|Families    |       31574|  996575|               31.00|
+2020-08-31|         36|           8|         2020|USA   |Retail  |null   |unknown     |unknown     |      529151|16509610|               31.00|
+2020-08-31|         36|           8|         2020|EUROPE|Retail  |C1     |Young Adults|Couples     |        4517|  141942|               31.00|
+2020-08-31|         36|           8|         2020|AFRICA|Retail  |C2     |Middle Aged |Couples     |       58046| 1758388|               30.00|
+2020-08-31|         36|           8|         2020|CANADA|Shopify |F2     |Middle Aged |Families    |        1336|  243878|              182.00|
+2020-08-31|         36|           8|         2020|AFRICA|Shopify |F3     |Retirees    |Families    |        2514|  519502|              206.00|
+2020-08-31|         36|           8|         2020|ASIA  |Shopify |F1     |Young Adults|Families    |        2158|  371417|              172.00|
+2020-08-31|         36|           8|         2020|AFRICA|Shopify |F2     |Middle Aged |Families    |         318|   49557|              155.00|
+2020-08-31|         36|           8|         2020|AFRICA|Retail  |C3     |Retirees    |Couples     |      111032| 3888162|               35.00|
 
 
 /*
@@ -107,7 +107,7 @@ week_day  |week_number|month_number|calendar_year|region|platform|segment|age_ba
 -- 1. What day of the week is used for each week_date value?
 
 SELECT
-	DISTINCT date_part('dow', week_day) AS day_of_week,
+	DISTINCT date_part('dow', week_day)::int AS day_of_week,
 	to_char(week_day, 'Day') AS day_of_week_name
 FROM clean_weekly_sales;
 
@@ -115,7 +115,101 @@ FROM clean_weekly_sales;
 
 day_of_week|day_of_week_name|
 -----------+----------------+
-        1.0|Monday          |
+          1|Monday          |
+        
+-- 2. What range of week numbers are missing from the dataset?
+
+-- Using a recursive cte        
+       
+WITH RECURSIVE week_count AS (
+	SELECT
+		1 AS week_num
+	UNION ALL
+	SELECT week_num + 1
+	FROM week_count
+	WHERE week_num < 52
+)
+
+SELECT week_num AS missing_weeks
+FROM week_count 
+WHERE week_num NOT IN (SELECT DISTINCT week_number FROM clean_weekly_sales);
+
+-- Or using generate_series function
+
+SELECT
+	*
+FROM
+	generate_series(1, 52) AS missing_weeks
+WHERE
+	NOT EXISTS (
+	SELECT
+		1
+	FROM
+		clean_weekly_sales
+	WHERE
+		missing_weeks = week_number);
+	
+-- Results:
+	
+missing_weeks|
+-------------+
+            1|
+            2|
+            3|
+            4|
+            5|
+            6|
+            7|
+            8|
+            9|
+           10|
+           11|
+           12|
+           37|
+           38|
+           39|
+           40|
+           41|
+           42|
+           43|
+           44|
+           45|
+           46|
+           47|
+           48|
+           49|
+           50|
+           51|
+           52|
+
+-- 3. How many total transactions were there for each year in the dataset?
+
+SELECT 
+	calendar_year,
+	sum(transactions) AS total_transactions
+FROM clean_weekly_sales
+GROUP BY calendar_year
+ORDER BY calendar_year;
+        
+-- Results:
+
+calendar_year|total_transactions|
+-------------+------------------+
+         2018|         346406460|
+         2019|         365639285|
+         2020|         375813651|
+         
+-- 4. What is the total sales for each region for each month?
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
 
 
 
