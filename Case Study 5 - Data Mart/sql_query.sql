@@ -240,10 +240,67 @@ platform|total_transactions|
 --------+------------------+
 Shopify |           5925169|
 Retail  |        1081934227|
+
+-- 6. What is the percentage of sales for Retail vs Shopify for each month?
+
+SELECT
+	calendar_year,
+	month_number,
+	round(100 * sum(
+		CASE
+			WHEN platform = 'Retail' THEN total_sales
+			ELSE 0
+		END 
+	) / sum(total_sales), 2) AS retail_perc,
+	round(100 * sum(
+		CASE
+			WHEN platform = 'Shopify' THEN total_sales
+			ELSE 0
+		END 
+	) / sum(total_sales), 2) AS shopify_perc
+from
+	(SELECT 
+		platform,
+		calendar_year,
+		month_number,
+		sum(sales) AS total_sales
+	FROM clean_weekly_sales
+	GROUP BY 
+		platform,
+		calendar_year,
+		month_number
+	ORDER BY calendar_year, month_number, platform) AS tmp      
+GROUP BY 
+	calendar_year,
+	month_number
+	
+-- Results:
+	
+calendar_year|month_number|retail_perc|shopify_perc|
+-------------+------------+-----------+------------+
+         2018|           3|      97.92|        2.08|
+         2018|           4|      97.93|        2.07|
+         2018|           5|      97.73|        2.27|
+         2018|           6|      97.76|        2.24|
+         2018|           7|      97.75|        2.25|
+         2018|           8|      97.71|        2.29|
+         2018|           9|      97.68|        2.32|
+         2019|           3|      97.71|        2.29|
+         2019|           4|      97.80|        2.20|
+         2019|           5|      97.52|        2.48|
+         2019|           6|      97.42|        2.58|
+         2019|           7|      97.35|        2.65|
+         2019|           8|      97.21|        2.79|
+         2019|           9|      97.09|        2.91|
+         2020|           3|      97.30|        2.70|
+         2020|           4|      96.96|        3.04|
+         2020|           5|      96.71|        3.29|
+         2020|           6|      96.80|        3.20|
+         2020|           7|      96.67|        3.33|
+         2020|           8|      96.51|        3.49|
         
-        
-        
-        
+-- 7. What is the percentage of sales by demographic for each year in the dataset? 
+
 
 
 
