@@ -201,11 +201,31 @@ calendar_year|total_transactions|
          
 -- 4. What is the total sales for each region for each month?
         
+SELECT 
+	region,
+	calendar_year,
+	month_number,
+	sum(sales) AS total_sales
+FROM clean_weekly_sales
+GROUP BY 
+	region,
+	calendar_year,
+	month_number
+ORDER BY calendar_year, month_number, region;
 
-        
-        
-        
-        
+-- Results:  Only showing the first month of 2018 of all regions
+
+region       |calendar_year|month_number|total_sales|
+-------------+-------------+------------+-----------+
+AFRICA       |         2018|           3|  130542213|
+ASIA         |         2018|           3|  119180883|
+CANADA       |         2018|           3|   33815571|
+EUROPE       |         2018|           3|    8402183|
+OCEANIA      |         2018|           3|  175777460|
+SOUTH AMERICA|         2018|           3|   16302144|
+USA          |         2018|           3|   52734998|
+
+
         
         
         
