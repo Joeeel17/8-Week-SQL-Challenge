@@ -225,7 +225,21 @@ OCEANIA      |         2018|           3|  175777460|
 SOUTH AMERICA|         2018|           3|   16302144|
 USA          |         2018|           3|   52734998|
 
+-- 5. What is the total count of transactions for each platform
+        
+SELECT 
+	platform,
+	sum(transactions) AS total_transactions
+FROM clean_weekly_sales
+GROUP BY 
+	platform;      
+        
+-- Results:
 
+platform|total_transactions|
+--------+------------------+
+Shopify |           5925169|
+Retail  |        1081934227|
         
         
         
