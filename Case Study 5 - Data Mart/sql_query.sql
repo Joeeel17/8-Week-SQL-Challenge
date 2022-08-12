@@ -301,6 +301,43 @@ calendar_year|month_number|retail_perc|shopify_perc|
         
 -- 7. What is the percentage of sales by demographic for each year in the dataset? 
 
+SELECT 
+	calendar_year,
+	demographics,
+	sum(sales) AS sales_per_demographic,
+	/* We can nest aggregate functions inside a window function because it operates as a level above the *group by* 
+	 * aime.m.shaker@gmail.com
+	 */
+	round(100 * sum(sales) / sum(sum(sales)) OVER (PARTITION BY calendar_year), 2) AS percentage
+FROM clean_weekly_sales
+GROUP BY 
+	demographics,
+	calendar_year
+ORDER BY 
+	calendar_year, 
+	demographics
+	
+-- Results:
+
+calendar_year|demographics|sales_per_demographic|percentage|
+-------------+------------+---------------------+----------+
+         2018|Couples     |           3402388688|     26.38|
+         2018|Families    |           4125558033|     31.99|
+         2018|unknown     |           5369434106|     41.63|
+         2019|Couples     |           3749251935|     27.28|
+         2019|Families    |           4463918344|     32.47|
+         2019|unknown     |           5532862221|     40.25|
+         2020|Couples     |           4049566928|     28.72|
+         2020|Families    |           4614338065|     32.73|
+         2020|unknown     |           5436315907|     38.55|
+         
+-- 8.  Which age_band and demographic values contribute the most to Retail sales?
+
+         
+
+         
+
+	
 
 
 
