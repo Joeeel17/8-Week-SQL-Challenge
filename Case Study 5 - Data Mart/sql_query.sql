@@ -363,7 +363,45 @@ demographics|age_band|total_sales|percentage|
 ------------+--------+-----------+----------+
 Families    |Retirees| 6634686916|     28.13|
 
-        
+-- 9. Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? 
+-- If not - how would you calculate it instead? 
+
+/* 
+ * Note: We cannot use the 'average_transactions' column ot calculate avgerage transactions by platform and year
+ * as we cannot not get an average of an average and have accurate data.
+**/
+
+SELECT
+	calendar_year,
+	platform,
+	(sum(sales) / sum(transactions)) AS avg_transaction_size
+FROM clean_weekly_sales
+GROUP BY
+	calendar_year,
+	platform
+ORDER BY 
+	calendar_year,
+	platform
+
+-- Results:
+	
+calendar_year|platform|avg_transaction_size|
+-------------+--------+--------------------+
+         2018|Retail  |                  36|
+         2018|Shopify |                 192|
+         2019|Retail  |                  36|
+         2019|Shopify |                 183|
+         2020|Retail  |                  36|
+         2020|Shopify |                 179|
+
+
+
+
+
+
+
+
+
 
 	
 
