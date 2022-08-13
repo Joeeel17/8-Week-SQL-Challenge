@@ -333,9 +333,37 @@ calendar_year|demographics|sales_per_demographic|percentage|
          
 -- 8.  Which age_band and demographic values contribute the most to Retail sales?
 
-         
+SELECT
+	demographics,
+	age_band,
+	total_sales,
+	percentage
+from
+	(SELECT
+		demographics,
+		age_band,
+		sum(sales) AS total_sales,
+		rank() OVER (ORDER BY sum(sales) desc) AS rnk,
+		round(100 * sum(sales) / sum(sum(sales)) over (), 2) AS percentage
+	FROM 
+		clean_weekly_sales
+	WHERE
+		platform = 'Retail'
+	AND
+		age_band <> 'unknown'
+	GROUP BY 
+		demographics,
+		age_band) AS tmp
+WHERE rnk = 1
 
-         
+-- Results:
+-- ** NOTE ** I did not include 'unknown' because they ask for a demographic and age_band
+
+demographics|age_band|total_sales|percentage|
+------------+--------+-----------+----------+
+Families    |Retirees| 6634686916|     28.13|
+
+        
 
 	
 
