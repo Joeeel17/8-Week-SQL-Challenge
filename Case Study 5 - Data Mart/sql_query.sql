@@ -426,12 +426,40 @@ week_number|
 -- 1. What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction 
 -- rate in actual values and percentage of sales? 
 
-
-	
+-- 1a. What is the total sales for the 4 weeks before and after 2020-06-15?
+         
+SELECT
+	CASE
+		WHEN week_number BETWEEN 21 AND 24 THEN 'Before'
+		WHEN week_number BETWEEN 25 AND 28 THEN 'After'
+		ELSE null
+	END AS time_period,
+	sum(sales) AS total_sales
+FROM
+	clean_weekly_sales
+WHERE
+	calendar_year = '2020'
+GROUP BY 
+	time_period
+-- Remove null values from time_period
+HAVING (
+	CASE
+		WHEN week_number BETWEEN 21 AND 24 THEN 'Before'
+		WHEN week_number BETWEEN 25 AND 28 THEN 'After'
+		ELSE null
+	END
+) IS NOT NULL
+ORDER BY 
+	time_period desc
         
+-- Results:
+	
+time_period|total_sales|
+-----------+-----------+
+Before     | 2345878357|
+After      | 2318994169|
 
-
-
+-- 1b. What is the growth or reduction rate in actual values and percentage of sales? 
 
 
 
