@@ -13,4 +13,4 @@ For this case study there is a total of 5 datasets which you will need to combin
 **page_hierarchy**
 
 ## Entity Relationship Diagram
-![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%205%20-%20Data%20Mart/ERD.JPG)
+![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%206%20-%20Clique%20Bait/ERD.JPG)
