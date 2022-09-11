@@ -76,5 +76,20 @@ visited_month|total_visits|
           3.0|         916|
           4.0|         248|
           5.0|          36|
-    
+          
+-- 4. What is the number of events for each event type?         
+	
+SELECT
+	e.event_type,
+	ei.event_name,
+	count(e.event_type) AS n_events
+FROM
+	clique_bait.events AS e
+JOIN clique_bait.event_identifier AS ei
+ON e.event_type = ei.event_type
+GROUP BY
+	e.event_type,
+	ei.event_name
+ORDER BY 
+	e.event_type
 
