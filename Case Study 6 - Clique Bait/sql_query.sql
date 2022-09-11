@@ -92,4 +92,29 @@ GROUP BY
 	ei.event_name
 ORDER BY 
 	e.event_type
+	
+-- Results:
+	
+event_type|event_name   |n_events|
+----------+-------------+--------+
+         1|Page View    |   20928|
+         2|Add to Cart  |    8451|
+         3|Purchase     |    1777|
+         4|Ad Impression|     876|
+         5|Ad Click     |     702|
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
