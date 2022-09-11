@@ -103,10 +103,25 @@ event_type|event_name   |n_events|
          4|Ad Impression|     876|
          5|Ad Click     |     702|
 	
+-- 5. What is the percentage of visits which have a purchase event?
+
+SELECT
+	round(
+		100 * 
+			sum(
+				CASE 
+					WHEN event_type = 3 THEN 1
+					ELSE 0
+				end)::numeric 
+			/ count(DISTINCT visit_id), 2) AS purchase_percentage
+FROM 
+	clique_bait.events
 	
-	
-	
-	
+-- Results:
+
+purchase_percentage|
+-------------------+
+              49.86|
 	
 	
 	
