@@ -164,6 +164,37 @@ visit_percentage|
 ----------------+
            15.50|
            
+-- 7. What are the top 3 pages by number of views?
+           
+SELECT
+	e.page_id,
+	ph.page_name,
+	count(e.page_id) AS n_page
+FROM
+	clique_bait.events AS e
+JOIN
+	clique_bait.page_hierarchy AS ph
+ON
+	e.page_id = ph.page_id
+WHERE e.event_type = 1
+GROUP BY
+	e.page_id,
+	ph.page_name
+ORDER BY
+	n_page DESC
+LIMIT 
+	3
+	
+-- Results:
+
+page_id|page_name   |n_page|
+-------+------------+------+
+      2|All Products|  3174|
+     12|Checkout    |  2103|
+      1|Home Page   |  1782|
+      
+    
+          
            
 
 	
