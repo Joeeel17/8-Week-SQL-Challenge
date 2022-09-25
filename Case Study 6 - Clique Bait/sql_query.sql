@@ -124,6 +124,55 @@ purchase_percentage|
               49.86|
 	
 	
+-- 6. What is the percentage of visits which view the checkout page but do not have a purchase event?
+ 
+WITH get_counts AS              
+	(SELECT
+		visit_id,
+		-- flag as visit_id having visited checkout page and had page view event.
+		sum(
+			CASE
+				WHEN page_id = 12 AND event_type = 1 
+					THEN 1
+				ELSE
+					0
+			END	
+		) AS checked_out,
+		-- flag as visit_id having made a purchase.
+		sum(
+			CASE
+				WHEN event_type = 3 
+					THEN 1
+				ELSE
+					0
+			END	
+		) AS purchased
+	FROM
+		clique_bait.events
+	GROUP BY
+		visit_id)
+	
+SELECT
+	-- Subtract percentage that did visit and purchase from 100%
+	round(100 * (1 - sum(purchased)::numeric / sum(checked_out)), 2) AS visit_percentage
+FROM
+	get_counts
+
+-- Results:
+
+visit_percentage|
+----------------+
+           15.50|
+           
+           
+
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
