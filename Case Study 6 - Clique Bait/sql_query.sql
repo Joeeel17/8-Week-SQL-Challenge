@@ -230,17 +230,57 @@ Shellfish       |      6204|       3792|
 Fish            |      4633|       2789|
 Luxury          |      3032|       1870|
       
-    
-          
-           
+-- 9. What are the top 3 products by purchases?
 
+WITH get_purchases AS (
+	SELECT
+		visit_id
+	FROM
+		clique_bait.events
+	WHERE
+		event_type = 3
+)	
+SELECT
+	ph.page_name,
+	sum(
+		CASE
+			WHEN e.event_type = 2 THEN 1
+			ELSE 0
+		END	
+	) AS top_3_purchased
+FROM
+	clique_bait.page_hierarchy AS ph
+JOIN 
+	clique_bait.events AS e
+ON
+	e.page_id = ph.page_id
+JOIN
+	get_purchases AS gp
+ON
+	e.visit_id = gp.visit_id 
+WHERE
+	ph.product_category IS NOT NULL
+AND
+	ph.page_name NOT in('1','2','12','13')
+AND
+	gp.visit_id = e.visit_id
+GROUP BY
+	ph.page_name
+ORDER BY
+	top_3_purchased DESC
+LIMIT 3
 	
+-- Results:
+
+page_name|top_3_purchased|
+---------+---------------+
+Lobster  |            754|
+Oyster   |            726|
+Crab     |            719|
 	
+-- B. Digital Analysis
 	
-	
-	
-	
-	
+
 	
 	
 	
