@@ -193,6 +193,43 @@ page_id|page_name   |n_page|
      12|Checkout    |  2103|
       1|Home Page   |  1782|
       
+-- 8. What is the number of views and cart adds for each product category?
+      
+SELECT
+	ph.product_category,
+	sum(
+		CASE
+			WHEN e.event_type = 1 THEN 1
+			ELSE 0
+		END	
+	) AS page_views,
+	sum(
+		CASE
+			WHEN e.event_type = 2 THEN 1
+			ELSE 0
+		END	
+	) AS add_to_cart
+FROM
+	clique_bait.page_hierarchy AS ph
+JOIN 
+	clique_bait.events AS e
+ON
+	e.page_id = ph.page_id
+WHERE
+	ph.product_category IS NOT null
+GROUP BY
+	ph.product_category
+ORDER BY 
+	page_views DESC
+	
+-- Results:
+	
+product_category|page_views|add_to_cart|
+----------------+----------+-----------+
+Shellfish       |      6204|       3792|
+Fish            |      4633|       2789|
+Luxury          |      3032|       1870|
+      
     
           
            
