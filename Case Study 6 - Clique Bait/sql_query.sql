@@ -293,29 +293,99 @@ Crab     |            719|
 	
 -- How many times was each product viewed?
 -- How many times was each product added to cart?
-SELECT
-	ph.page_id,
-	sum(
-		CASE
-			WHEN event_type = 1 THEN 1
-			ELSE 0
-		END
-	 ) AS n_page_views,
-	 sum(
-		CASE
-			WHEN event_type = 2 THEN 1
-			ELSE 0
-		END
-	 ) AS n_added_to_cart
-FROM
-	page_hierarchy AS ph
-JOIN
-	events AS e
-ON ph.page_id = e.page_id
-WHERE
-	ph.product_id IS NOT NULL
-GROUP BY
-	ph.page_id
+
+/*
+ * Create a CTE that selects all products that where viewed and added to cart.
+ */
+WITH product_viewed AS 
+(
+	SELECT
+		ph.page_id,
+		sum(
+			CASE
+				WHEN event_type = 1 THEN 1
+				ELSE 0
+			END
+		 ) AS n_page_views,
+		 sum(
+			CASE
+				WHEN event_type = 2 THEN 1
+				ELSE 0
+			END
+		 ) AS n_added_to_cart
+	FROM
+		page_hierarchy AS ph
+	JOIN
+		events AS e
+	ON ph.page_id = e.page_id
+	WHERE
+		ph.product_id IS NOT NULL
+	GROUP BY
+		ph.page_i
+),
+product_purchased AS 
+(		
+	SELECT
+		e.visit_id,
+		sum(
+			CASE
+				WHEN event_type = 2 THEN 1
+				ELSE 0
+			END
+		 ) AS purchased_from_cart
+	FROM
+		page_hierarchy AS ph
+	JOIN
+		events AS e
+	ON ph.page_id = e.page_id
+	WHERE
+		ph.product_id IS NOT NULL
+	AND
+		exists(
+			SELECT
+				visit_id
+			FROM
+				clique_bait.events
+			WHERE
+				event_type = 3
+			AND
+				e.visit_id = visit_id
+		)
+	GROUP BY
+		e.visit_id	
+),
+product_abandoned AS 
+(		
+	SELECT
+		e.visit_id,
+		sum(
+			CASE
+				WHEN event_type = 2 THEN 1
+				ELSE 0
+			END
+		 ) AS abandoned_in_cart
+	FROM
+		page_hierarchy AS ph
+	JOIN
+		events AS e
+	ON ph.page_id = e.page_id
+	WHERE
+		ph.product_id IS NOT NULL
+	AND
+		NOT exists(
+			SELECT
+				visit_id
+			FROM
+				clique_bait.events
+			WHERE
+				event_type = 3
+			AND
+				e.visit_id = visit_id
+		)
+	GROUP BY
+		e.visit_id	
+)
+
 	
 	
 	
