@@ -4,7 +4,9 @@
  *  
 */
 
--- A. Digital Analysis
+/*
+	2. Digital Analysis
+*/
 
 -- 1. How many users are there?
 
@@ -278,14 +280,42 @@ Lobster  |            754|
 Oyster   |            726|
 Crab     |            719|
 	
--- B. Digital Analysis
-	
+/*
+	3. Product Funnel Analysis	
 
+	Using a single SQL query - create a new output table which has the following details:
+
+	How many times was each product viewed?
+	How many times was each product added to cart?
+	How many times was each product added to a cart but not purchased (abandoned)?
+	How many times was each product purchased?	
+*/	
 	
-	
-	
-	
-	
+-- How many times was each product viewed?
+-- How many times was each product added to cart?
+SELECT
+	ph.page_id,
+	sum(
+		CASE
+			WHEN event_type = 1 THEN 1
+			ELSE 0
+		END
+	 ) AS n_page_views,
+	 sum(
+		CASE
+			WHEN event_type = 2 THEN 1
+			ELSE 0
+		END
+	 ) AS n_added_to_cart
+FROM
+	page_hierarchy AS ph
+JOIN
+	events AS e
+ON ph.page_id = e.page_id
+WHERE
+	ph.product_id IS NOT NULL
+GROUP BY
+	ph.page_id
 	
 	
 	
