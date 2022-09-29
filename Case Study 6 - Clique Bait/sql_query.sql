@@ -447,13 +447,50 @@ Shellfish       |           6204|               3792|           2898|           
 Fish            |           4633|               2789|           2115|            674|
 	
 -- Use your 2 new output tables - answer the following questions:	
+
+-- 1. Which product had the most views, cart adds and purchases?
 	
+WITH rankings AS 
+(
+	SELECT
+		page_name,
+		RANK() OVER (ORDER BY n_page_views DESC) AS most_page_views,
+		RANK() OVER (ORDER BY n_added_to_cart DESC) AS most_cart_adds,
+		RANK() OVER (ORDER BY purchased_from_cart DESC) AS most_purchased
+	FROM
+		product_info
+)
+SELECT
+	page_name,
+	'Most Viewed' AS product
+FROM
+	rankings
+WHERE 
+	most_page_views = 1
+UNION
+SELECT
+	page_name,
+	'Most Added' AS product
+FROM
+	rankings
+WHERE 
+	most_cart_adds = 1
+UNION
+SELECT
+	page_name,
+	'Most Purchased' AS product
+FROM
+	rankings
+WHERE 
+	most_purchased = 1
 	
-	
-	
-	
-	
-	
+-- Results:
+
+page_name|product       |
+---------+--------------+
+Oyster   |Most Viewed   |
+Lobster  |Most Added    |
+Lobster  |Most Purchased|
 	
 	
 	
