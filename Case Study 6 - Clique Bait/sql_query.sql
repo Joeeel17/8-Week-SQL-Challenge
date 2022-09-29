@@ -297,95 +297,134 @@ Crab     |            719|
 /*
  * Create a CTE that selects all products that where viewed and added to cart.
  */
-WITH product_viewed AS 
+
+CREATE TEMP TABLE product_info AS 
 (
+	WITH product_viewed AS 
+	(
+		SELECT
+			ph.page_id,
+			sum(
+				CASE
+					WHEN event_type = 1 THEN 1
+					ELSE 0
+				END
+			 ) AS n_page_views,
+			 sum(
+				CASE
+					WHEN event_type = 2 THEN 1
+					ELSE 0
+				END
+			 ) AS n_added_to_cart
+		FROM
+			page_hierarchy AS ph
+		JOIN
+			events AS e
+		ON ph.page_id = e.page_id
+		WHERE
+			ph.product_id IS NOT NULL
+		GROUP BY
+			ph.page_id
+	),
+	product_purchased AS 
+	(		
+		SELECT
+			e.page_id,
+			sum(
+				CASE
+					WHEN event_type = 2 THEN 1
+					ELSE 0
+				END
+			 ) AS purchased_from_cart
+		FROM
+			page_hierarchy AS ph
+		JOIN
+			events AS e
+		ON ph.page_id = e.page_id
+		WHERE
+			ph.product_id IS NOT NULL
+		AND
+			exists(
+				SELECT
+					visit_id
+				FROM
+					clique_bait.events
+				WHERE
+					event_type = 3
+				AND
+					e.visit_id = visit_id
+			)
+		AND
+			ph.page_id NOT IN (1,2,12,13)
+		GROUP BY
+			e.page_id	
+	),
+	product_abandoned AS 
+	(		
+		SELECT
+			e.page_id,
+			sum(
+				CASE
+					WHEN event_type = 2 THEN 1
+					ELSE 0
+				END
+			 ) AS abandoned_in_cart
+		FROM
+			page_hierarchy AS ph
+		JOIN
+			events AS e
+		ON ph.page_id = e.page_id
+		WHERE
+			ph.product_id IS NOT NULL
+		AND
+			NOT exists(
+				SELECT
+					visit_id
+				FROM
+					clique_bait.events
+				WHERE
+					event_type = 3
+				AND
+					e.visit_id = visit_id
+			)
+		AND
+			ph.page_id NOT IN (1,2,12,13)
+		GROUP BY
+			e.page_id	
+	)
 	SELECT
 		ph.page_id,
-		sum(
-			CASE
-				WHEN event_type = 1 THEN 1
-				ELSE 0
-			END
-		 ) AS n_page_views,
-		 sum(
-			CASE
-				WHEN event_type = 2 THEN 1
-				ELSE 0
-			END
-		 ) AS n_added_to_cart
+		ph.page_name,
+		ph.product_category,
+		pv.n_page_views,
+		pv.n_added_to_cart,
+		pp.purchased_from_cart,
+		pa.abandoned_in_cart
 	FROM
 		page_hierarchy AS ph
 	JOIN
-		events AS e
-	ON ph.page_id = e.page_id
-	WHERE
-		ph.product_id IS NOT NULL
-	GROUP BY
-		ph.page_i
-),
-product_purchased AS 
-(		
-	SELECT
-		e.visit_id,
-		sum(
-			CASE
-				WHEN event_type = 2 THEN 1
-				ELSE 0
-			END
-		 ) AS purchased_from_cart
-	FROM
-		page_hierarchy AS ph
+		product_viewed AS pv ON pv.page_id = ph.page_id
 	JOIN
-		events AS e
-	ON ph.page_id = e.page_id
-	WHERE
-		ph.product_id IS NOT NULL
-	AND
-		exists(
-			SELECT
-				visit_id
-			FROM
-				clique_bait.events
-			WHERE
-				event_type = 3
-			AND
-				e.visit_id = visit_id
-		)
-	GROUP BY
-		e.visit_id	
-),
-product_abandoned AS 
-(		
-	SELECT
-		e.visit_id,
-		sum(
-			CASE
-				WHEN event_type = 2 THEN 1
-				ELSE 0
-			END
-		 ) AS abandoned_in_cart
-	FROM
-		page_hierarchy AS ph
+		product_purchased AS pp ON pp.page_id = ph.page_id
 	JOIN
-		events AS e
-	ON ph.page_id = e.page_id
-	WHERE
-		ph.product_id IS NOT NULL
-	AND
-		NOT exists(
-			SELECT
-				visit_id
-			FROM
-				clique_bait.events
-			WHERE
-				event_type = 3
-			AND
-				e.visit_id = visit_id
-		)
-	GROUP BY
-		e.visit_id	
-)
+		product_abandoned AS pa ON pa.page_id = ph.page_id
+);
 
+SELECT * FROM product_info;
+
+-- Results:
+
+page_id|page_name     |product_category|n_page_views|n_added_to_cart|purchased_from_cart|abandoned_in_cart|
+-------+--------------+----------------+------------+---------------+-------------------+-----------------+
+      3|Salmon        |Fish            |        1559|            938|                711|              227|
+      4|Kingfish      |Fish            |        1559|            920|                707|              213|
+      5|Tuna          |Fish            |        1515|            931|                697|              234|
+      6|Russian Caviar|Luxury          |        1563|            946|                697|              249|
+      7|Black Truffle |Luxury          |        1469|            924|                707|              217|
+      8|Abalone       |Shellfish       |        1525|            932|                699|              233|
+      9|Lobster       |Shellfish       |        1547|            968|                754|              214|
+     10|Crab          |Shellfish       |        1564|            949|                719|              230|
+     11|Oyster        |Shellfish       |        1568|            943|                726|              217|
 	
 	
 	
