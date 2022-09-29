@@ -290,13 +290,6 @@ Crab     |            719|
 	How many times was each product added to a cart but not purchased (abandoned)?
 	How many times was each product purchased?	
 */	
-	
--- How many times was each product viewed?
--- How many times was each product added to cart?
-
-/*
- * Create a CTE that selects all products that where viewed and added to cart.
- */
 
 CREATE TEMP TABLE product_info AS 
 (
@@ -425,6 +418,46 @@ page_id|page_name     |product_category|n_page_views|n_added_to_cart|purchased_f
       9|Lobster       |Shellfish       |        1547|            968|                754|              214|
      10|Crab          |Shellfish       |        1564|            949|                719|              230|
      11|Oyster        |Shellfish       |        1568|            943|                726|              217|
+
+-- Additionally, create another table which further aggregates the data for the above points but this time for each 
+-- product category instead of individual products.
+
+DROP TABLE IF EXISTS category_info;
+CREATE TEMP TABLE category_info AS (
+	SELECT
+		product_category,
+		sum(n_page_views) AS total_page_view,
+		sum(n_added_to_cart) AS total_added_to_cart,
+		sum(purchased_from_cart) AS total_purchased,
+		sum(abandoned_in_cart) AS total_abandoned
+	FROM
+		product_info
+	GROUP BY
+		product_category
+);
+
+SELECT * FROM category_info;
+	
+-- Results:
+
+product_category|total_page_view|total_added_to_cart|total_purchased|total_abandoned|
+----------------+---------------+-------------------+---------------+---------------+
+Luxury          |           3032|               1870|           1404|            466|
+Shellfish       |           6204|               3792|           2898|            894|
+Fish            |           4633|               2789|           2115|            674|
+	
+-- Use your 2 new output tables - answer the following questions:	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
