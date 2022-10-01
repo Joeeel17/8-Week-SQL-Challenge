@@ -592,7 +592,7 @@ added_purchased_ratio|
 */                      
 
 DROP TABLE IF EXISTS campaign_analysis;
-CREATE TEMP TABLE campaign_analysis (
+CREATE TEMP TABLE campaign_analysis AS (
 	WITH purchase_check AS (
 		SELECT
 			visit_id,
@@ -684,6 +684,8 @@ CREATE TEMP TABLE campaign_analysis (
 	ORDER BY
 		user_id
 );
+
+SELECT * FROM campaign_analysis LIMIT 12;
             
 -- Results: (Showing only the first dozen)
             
