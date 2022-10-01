@@ -562,7 +562,152 @@ views_added_ratio|
 -----------------+
             60.95|
 	
-	
+-- 5.  What is the average conversion rate from cart add to purchase?
+            
+SELECT
+	round(avg(100 * purchased_from_cart::NUMERIC / n_added_to_cart), 2) AS added_purchased_ratio
+FROM
+	product_info            
+            
+-- Results:
+
+added_purchased_ratio|
+---------------------+
+                75.93|
+            
+/*
+	4. Campaigns Analysis	
+
+	Generate a table that has 1 single row for every unique visit_id record and has the following columns:
+		* user_id
+		* visit_id
+		* visit_start_time: the earliest event_time for each visit
+		* page_views: count of page views for each visit
+		* cart_adds: count of product cart add events for each visit
+		* purchase: 1/0 flag if a purchase event exists for each visit
+		* campaign_name: map the visit to a campaign if the visit_start_time falls between the start_date and end_date
+		* impression: count of ad impressions for each visit
+		* click: count of ad clicks for each visit
+		* (Optional column) cart_products: a comma separated text value with products added to the cart sorted by the order they were added to the cart (hint: use the sequence_number)	
+*/                      
+
+DROP TABLE IF EXISTS campaign_analysis;
+CREATE TEMP TABLE campaign_analysis (
+	WITH purchase_check AS (
+		SELECT
+			visit_id,
+			CASE
+				WHEN n_flag >= 1 THEN TRUE
+				ELSE false
+			END  AS purchase_flag
+		from
+			(SELECT
+				visit_id,
+				sum(
+					CASE
+						WHEN event_type = 3 THEN 1
+						ELSE 0
+				END) AS n_flag
+			FROM
+				events
+			GROUP BY 
+				visit_id) AS tmp
+	),
+	get_cart_items AS (
+		SELECT 
+			e.visit_id,
+			string_agg(
+				ph.page_name,
+				', '
+				ORDER BY
+					sequence_number
+			) AS cart_items
+		FROM
+			events AS e
+		JOIN
+			page_hierarchy AS ph ON ph.page_id = e.page_id
+		WHERE
+			e.event_type = 2
+		GROUP BY
+			e.visit_id
+	)
+	SELECT
+		e.visit_id,
+		u.user_id,
+		min(u.start_date::date) AS visit_start,
+		sum(
+			CASE
+				WHEN event_type = 1 THEN 1
+				ELSE 0
+			END 
+		) AS page_views,
+		sum(
+			CASE
+				WHEN event_type = 2 THEN 1
+				ELSE 0
+			END 
+		) AS cart_adds,
+		pc.purchase_flag AS purchase_flag,
+		ci.campaign_name,
+		sum(
+			CASE
+				WHEN event_type = 4 THEN 1
+				ELSE 0
+			END 
+		) AS ad_impressions,
+		sum(
+			CASE
+				WHEN event_type = 5 THEN 1
+				ELSE 0
+			END 
+		) AS ad_clicks,
+		CASE
+			WHEN gci.cart_items IS NULL THEN ''
+			ELSE gci.cart_items
+		END  AS cart_items
+	FROM
+		events AS e
+	JOIN
+		users AS u ON u.cookie_id = e.cookie_id
+	JOIN 
+		purchase_check AS pc ON pc.visit_id = e.visit_id
+	LEFT JOIN
+		campaign_identifier AS ci ON u.start_date BETWEEN ci.start_date AND ci.end_date
+	LEFT JOIN 
+		get_cart_items AS gci ON gci.visit_id = e.visit_id
+	GROUP BY 
+		e.visit_id,
+		u.user_id,
+		pc.purchase_flag,
+		ci.campaign_name,
+		gci.cart_items
+	ORDER BY
+		user_id
+);
+            
+-- Results: (Showing only the first dozen)
+            
+visit_id|user_id|visit_start|page_views|cart_adds|purchase_flag|campaign_name                    |ad_impressions|ad_clicks|cart_items                                                                           |
+--------+-------+-----------+----------+---------+-------------+---------------------------------+--------------+---------+-------------------------------------------------------------------------------------+
+02a5d5  |      1| 2020-02-26|         4|        0|false        |Half Off - Treat Your Shellf(ish)|             0|        0|                                                                                     |
+0826dc  |      1| 2020-02-26|         1|        0|false        |Half Off - Treat Your Shellf(ish)|             0|        0|                                                                                     |
+0fc437  |      1| 2020-02-04|        10|        6|true         |Half Off - Treat Your Shellf(ish)|             1|        1|Tuna, Russian Caviar, Black Truffle, Abalone, Crab, Oyster                           |
+30b94d  |      1| 2020-03-15|         9|        7|true         |Half Off - Treat Your Shellf(ish)|             1|        1|Salmon, Kingfish, Tuna, Russian Caviar, Abalone, Lobster, Crab                       |
+41355d  |      1| 2020-03-25|         6|        1|false        |Half Off - Treat Your Shellf(ish)|             0|        0|Lobster                                                                              |
+ccf365  |      1| 2020-02-04|         7|        3|true         |Half Off - Treat Your Shellf(ish)|             0|        0|Lobster, Crab, Oyster                                                                |
+eaffde  |      1| 2020-03-25|        10|        8|true         |Half Off - Treat Your Shellf(ish)|             1|        1|Salmon, Tuna, Russian Caviar, Black Truffle, Abalone, Lobster, Crab, Oyster          |
+f7c798  |      1| 2020-03-15|         9|        3|true         |Half Off - Treat Your Shellf(ish)|             0|        0|Russian Caviar, Crab, Oyster                                                         |
+0635fb  |      2| 2020-02-16|         9|        4|true         |Half Off - Treat Your Shellf(ish)|             0|        0|Salmon, Kingfish, Abalone, Crab                                                      |
+1f1198  |      2| 2020-02-01|         1|        0|false        |Half Off - Treat Your Shellf(ish)|             0|        0|                                                                                     |
+3b5871  |      2| 2020-01-18|         9|        6|true         |25% Off - Living The Lux Life    |             1|        1|Salmon, Kingfish, Russian Caviar, Black Truffle, Lobster, Oyster                     |
+49d73d  |      2| 2020-02-16|        11|        9|true         |Half Off - Treat Your Shellf(ish)|             1|        1|Salmon, Kingfish, Tuna, Russian Caviar, Black Truffle, Abalone, Lobster, Crab, Oyster|            
+            
+            
+            
+            
+            
+            
+            
 	
 	
 	
