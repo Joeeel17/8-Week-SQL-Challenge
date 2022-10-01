@@ -494,10 +494,42 @@ Lobster  |Most Purchased|
 	
 -- 2. Which product was most likely to be abandoned?
 
+SELECT
+	page_name
+from
+	(SELECT
+		page_name,
+		abandoned_in_cart
+	FROM
+		product_info
+	ORDER BY
+		abandoned_in_cart DESC
+	LIMIT 1) AS tmp
+	
+-- Results:
 
-	
-	
-	
-	
+page_name     |
+--------------+
+Russian Caviar|
+
+-- Initially I read the question as "Which is the most abandoned product".  However, the question is
+-- asking which product is 'most likely' to be abandoned.  So we must check which item has the highest
+-- probability of being viewed and abandoned.
+
+SELECT
+	page_name,
+	-- Subtract difference from the largest purchased item
+	100 - round(100 * purchased_from_cart::NUMERIC / n_added_to_cart, 2) AS abandoned_ratio
+FROM
+	product_info
+ORDER BY 
+	abandoned_ratio DESC
+LIMIT 1
+
+-- Results:
+
+page_name     |abandoned_ratio|
+--------------+---------------+
+Russian Caviar|          26.32|
 	
 
