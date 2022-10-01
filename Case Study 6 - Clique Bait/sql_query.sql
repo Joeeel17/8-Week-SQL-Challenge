@@ -549,13 +549,18 @@ page_name|purchased_views_ratio|
 ---------+---------------------+
 Lobster  |                48.74|
 	
+-- 4. What is the average conversion rate from view to cart add?	
+
+SELECT
+	round(avg(100 * n_added_to_cart::NUMERIC / n_page_views), 2) AS views_added_ratio
+FROM
+	product_info
 	
-	
-	
-	
-	
-	
-	
+-- Results:
+
+views_added_ratio|
+-----------------+
+            60.95|
 	
 	
 	
