@@ -492,7 +492,9 @@ Oyster   |Most Viewed   |
 Lobster  |Most Added    |
 Lobster  |Most Purchased|
 	
-	
+-- 2. Which product was most likely to be abandoned?
+
+
 	
 	
 	
