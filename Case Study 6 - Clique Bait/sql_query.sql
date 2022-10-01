@@ -532,4 +532,34 @@ page_name     |abandoned_ratio|
 --------------+---------------+
 Russian Caviar|          26.32|
 	
+-- 3. Which product had the highest view to purchase percentage?
 
+SELECT
+	page_name,
+	round(100 * purchased_from_cart::NUMERIC / n_page_views, 2) AS purchased_views_ratio
+FROM
+	product_info
+ORDER BY
+	purchased_views_ratio DESC
+LIMIT 1
+
+-- Results:
+
+page_name|purchased_views_ratio|
+---------+---------------------+
+Lobster  |                48.74|
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
