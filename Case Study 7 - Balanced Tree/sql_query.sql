@@ -140,6 +140,21 @@ Teal Button Up Shirt - Mens     |             36460|             4397.60|
 
 -- B.  Transaction Analysis
 
+-- 1. How many unique transactions were there?
+
+SELECT
+	count(DISTINCT txn_id) AS unique_transactions
+FROM
+	balanced_tree.sales
+	
+-- Results:
+	
+unique_transactions|
+-------------------+
+               2500|
+               
+-- 2. What is the average unique products purchased in each transaction?
+               
 
 
 
