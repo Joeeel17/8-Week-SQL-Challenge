@@ -138,7 +138,7 @@ Navy Oversized Jeans - Womens   |             50128|             6135.61|
 Cream Relaxed Jeans - Womens    |             37070|             4463.40|
 Teal Button Up Shirt - Mens     |             36460|             4397.60|
 
-
+-- B.  Transaction Analysis
 
 
 
