@@ -165,7 +165,7 @@ FROM
 	FROM
 		balanced_tree.sales AS s
 	GROUP BY
-		s.txn_id) AS tmp
+		s.txn_id) AS tmp;
 
 -- Results:
 		
@@ -175,6 +175,41 @@ avg_number_of_items|
                   
 -- 3. What are the 25th, 50th and 75th percentile values for the revenue per transaction?
 
+WITH get_revenue AS (
+	SELECT
+		txn_id,
+		round(sum((price * qty) * (1 - discount::NUMERIC / 100)), 2) AS revenue
+	FROM
+		balanced_tree.sales
+	GROUP BY
+		txn_id
+)
+SELECT
+	percentile_disc(0.25) WITHIN GROUP (ORDER BY revenue) AS "25th_percentile",
+	percentile_disc(0.5) WITHIN GROUP (ORDER BY revenue) AS "50th_percentile",
+	percentile_disc(0.75) WITHIN GROUP (ORDER BY revenue) AS "75th_percentile"
+FROM
+	get_revenue;
 
+-- Results:
 
+25th_percentile|50th_percentile|75th_percentile|
+---------------+---------------+---------------+
+         326.18|         441.00|         572.75|
+
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
        
