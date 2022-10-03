@@ -197,12 +197,57 @@ FROM
 ---------------+---------------+---------------+
          326.18|         441.00|         572.75|
 
+-- 4. What is the average discount value per transaction?
+
+WITH get_avg_discount AS (
+	SELECT
+		txn_id,
+		round(sum((price * qty) * (discount::NUMERIC / 100)), 2) AS discount
+	FROM
+		balanced_tree.sales
+	GROUP BY
+		txn_id
+)
+SELECT
+	round(avg(discount), 2) avg_discount
+FROM
+	get_avg_discount;
+
+-- Results:
+
+avg_discount|
+------------+
+       62.49|
+       
+-- 5. What is the percentage split of all transactions for members vs non-members?
                   
+SELECT
+	round(100 * (SELECT count(DISTINCT txn_id) FROM balanced_tree.sales WHERE member = 't')::numeric / count(DISTINCT txn_id), 2) AS member_percentage,
+	round(100 * (SELECT count(DISTINCT txn_id) FROM balanced_tree.sales WHERE member = 'f')::numeric / count(DISTINCT txn_id), 2) AS non_member_percentage
+FROM
+	balanced_tree.sales
+	
+member_percentage|non_member_percentage|
+-----------------+---------------------+
+            60.20|                39.80|
                   
-                  
-                  
-                  
-                  
+ -- OR
+ 
+SELECT
+	member,
+	-- The over clause allows us to nest aggregate functions
+	round(100 * (count(DISTINCT txn_id) / sum(count(DISTINCT txn_id)) OVER()), 2) AS percentage_distribution
+FROM
+	balanced_tree.sales
+GROUP BY
+	member
+
+-- Results:
+	
+member|percentage_distribution|
+------+-----------------------+
+false |                  39.80|
+true  |                  60.20|
                   
                   
                   
