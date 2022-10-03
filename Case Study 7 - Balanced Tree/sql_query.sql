@@ -249,7 +249,33 @@ member|percentage_distribution|
 false |                  39.80|
 true  |                  60.20|
                   
-                  
+-- 6. What is the average revenue for member transactions and non-member transactions?
+
+SELECT
+	CASE
+		WHEN member = 't' THEN 'Member'
+		ELSE 'Non-Member'
+	END AS membership_status,
+	round(avg(revenue), 2) AS avg_revenue
+from
+	(SELECT
+		txn_id,
+		member,
+		round(sum((price * qty) * (1 - discount::NUMERIC / 100)), 2) AS revenue
+	FROM
+		balanced_tree.sales
+	GROUP BY
+		txn_id,
+		member) AS tmp
+GROUP BY
+	member
+	
+-- Results:
+	
+membership_status|avg_revenue|
+-----------------+-----------+
+Non-Member       |     452.01|
+Member           |     454.14|
                   
                   
                   
