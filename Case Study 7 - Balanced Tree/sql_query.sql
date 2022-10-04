@@ -302,6 +302,30 @@ Blue Polo Shirt - Mens      |       217683|
 Grey Fashion Jacket - Womens|       209304|
 White Tee Shirt - Mens      |       152000|
 
+-- 2. What is the total quantity, revenue and discount for each segment?
+
+SELECT
+	pd.segment_id,
+	sum(s.qty) AS total_quantity,
+	sum(s.price * s.qty) AS gross_revenue,
+	round(sum((s.price * s.qty) * (s.discount::NUMERIC / 100)), 2) AS total_discounts,
+	round(sum((s.price * s.qty) * (1 - discount::NUMERIC / 100)), 2) AS total_revenue
+FROM
+	balanced_tree.product_details AS pd
+JOIN
+	balanced_tree.sales AS s ON s.prod_id = pd.product_id
+GROUP BY
+	pd.segment_id
+	
+-- Results:
+	
+segment_id|total_quantity|gross_revenue|total_discounts|total_revenue|
+----------+--------------+-------------+---------------+-------------+
+         3|         11349|       208350|       25343.97|    183006.03|
+         5|         11265|       406143|       49594.27|    356548.73|
+         4|         11385|       366983|       44277.46|    322705.54|
+         6|         11217|       307977|       37013.44|    270963.56|
+
 
 
 
