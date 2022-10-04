@@ -426,10 +426,50 @@ category_id|category_name|top_ranking_products        |total_quantity|
           1|Womens       |Grey Fashion Jacket - Womens|          3876|
           2|Mens         |Blue Polo Shirt - Mens      |          3819|
 
+-- 6. What is the percentage split of revenue by product for each segment?
 
+SELECT
+	segment_id,
+	segment_name,
+	product_id,
+	product_name,
+	total_revenue,
+	round(100 * (total_revenue / sum(total_revenue)OVER(PARTITION BY segment_id)), 2) AS revenue_percentage
+FROM
+     (SELECT
+		pd.segment_id,
+		pd.segment_name,
+		pd.product_id,
+		pd.product_name,
+		round(sum((s.price * s.qty) * (1 - discount::NUMERIC / 100)), 2) AS total_revenue
+	FROM
+		balanced_tree.product_details AS pd
+	JOIN
+		balanced_tree.sales AS s ON s.prod_id = pd.product_id
+	GROUP BY 
+		pd.product_id,
+		pd.product_name,
+		pd.segment_id,
+		pd.segment_name
+	ORDER BY
+		segment_id) AS tmp
 
-
-
+-- Results:
+		
+segment_id|segment_name|product_id|product_name                    |total_revenue|revenue_percentage|
+----------+------------+----------+--------------------------------+-------------+------------------+
+         3|Jeans       |e83aa3    |Black Straight Jeans - Womens   |    106407.04|             58.14|
+         3|Jeans       |c4a632    |Navy Oversized Jeans - Womens   |     43992.39|             24.04|
+         3|Jeans       |e31d39    |Cream Relaxed Jeans - Womens    |     32606.60|             17.82|
+         4|Jacket      |9ec847    |Grey Fashion Jacket - Womens    |    183912.12|             56.99|
+         4|Jacket      |72f5d4    |Indigo Rain Jacket - Womens     |     62740.47|             19.44|
+         4|Jacket      |d5e9a6    |Khaki Suit Jacket - Womens      |     76052.95|             23.57|
+         5|Shirt       |5d267b    |White Tee Shirt - Mens          |    133622.40|             37.48|
+         5|Shirt       |2a2353    |Blue Polo Shirt - Mens          |    190863.93|             53.53|
+         5|Shirt       |c8d436    |Teal Button Up Shirt - Mens     |     32062.40|              8.99|
+         6|Socks       |2feb6b    |Pink Fluro Polkadot Socks - Mens|     96377.73|             35.57|
+         6|Socks       |f084eb    |Navy Solid Socks - Mens         |    119861.64|             44.24|
+         6|Socks       |b9a74d    |White Striped Socks - Mens      |     54724.19|             20.20|
 
 
 
