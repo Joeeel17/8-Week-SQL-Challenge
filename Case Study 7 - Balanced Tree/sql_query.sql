@@ -306,6 +306,7 @@ White Tee Shirt - Mens      |       152000|
 
 SELECT
 	pd.segment_id,
+	pd.segment_name,
 	sum(s.qty) AS total_quantity,
 	sum(s.price * s.qty) AS gross_revenue,
 	round(sum((s.price * s.qty) * (s.discount::NUMERIC / 100)), 2) AS total_discounts,
@@ -315,16 +316,17 @@ FROM
 JOIN
 	balanced_tree.sales AS s ON s.prod_id = pd.product_id
 GROUP BY
-	pd.segment_id
+	pd.segment_id,
+	pd.segment_name
 	
 -- Results:
 	
-segment_id|total_quantity|gross_revenue|total_discounts|total_revenue|
-----------+--------------+-------------+---------------+-------------+
-         3|         11349|       208350|       25343.97|    183006.03|
-         5|         11265|       406143|       49594.27|    356548.73|
-         4|         11385|       366983|       44277.46|    322705.54|
-         6|         11217|       307977|       37013.44|    270963.56|
+segment_id|segment_name|total_quantity|gross_revenue|total_discounts|total_revenue|
+----------+------------+--------------+-------------+---------------+-------------+
+         4|Jacket      |         11385|       366983|       44277.46|    322705.54|
+         6|Socks       |         11217|       307977|       37013.44|    270963.56|
+         5|Shirt       |         11265|       406143|       49594.27|    356548.73|
+         3|Jeans       |         11349|       208350|       25343.97|    183006.03|
 
 -- 3. What is the top selling product for each segment?
 
@@ -332,6 +334,7 @@ WITH top_ranking AS
 (
 	SELECT
 		pd.segment_id,
+		pd.segment_name,
 		pd.product_name,
 		sum(qty) AS total_quantity,
 		rank() OVER (PARTITION BY pd.segment_id ORDER BY sum(qty) desc) AS rnk
@@ -341,10 +344,12 @@ WITH top_ranking AS
 		balanced_tree.sales AS s ON s.prod_id = pd.product_id
 	GROUP BY
 		pd.segment_id,
+		pd.segment_name,
 		pd.product_name
 )
 SELECT
 	segment_id,
+	segment_name,
 	product_name AS top_ranking_products,
 	total_quantity
 FROM 
@@ -354,21 +359,18 @@ WHERE
 	
 -- Results:
 	
-segment_id|top_ranking_products         |total_quantity|
-----------+-----------------------------+--------------+
-         3|Navy Oversized Jeans - Womens|          3856|
-         4|Grey Fashion Jacket - Womens |          3876|
-         5|Blue Polo Shirt - Mens       |          3819|
-         6|Navy Solid Socks - Mens      |          3792|
+segment_id|segment_name|top_ranking_products         |total_quantity|
+----------+------------+-----------------------------+--------------+
+         3|Jeans       |Navy Oversized Jeans - Womens|          3856|
+         4|Jacket      |Grey Fashion Jacket - Womens |          3876|
+         5|Shirt       |Blue Polo Shirt - Mens       |          3819|
+         6|Socks       |Navy Solid Socks - Mens      |          3792|
 
 -- 4. What is the total quantity, revenue and discount for each category?
 
 SELECT
 	pd.category_id,
-	CASE
-		WHEN pd.category_id = 1 THEN 'Female'
-		ELSE 'Male'
-	END AS category_type,
+	pd.category_name,
 	sum(s.qty) AS total_quantity,
 	sum(s.price * s.qty) AS gross_revenue,
 	round(sum((s.price * s.qty) * (s.discount::NUMERIC / 100)), 2) AS total_discounts,
@@ -378,16 +380,51 @@ FROM
 JOIN
 	balanced_tree.sales AS s ON s.prod_id = pd.product_id
 GROUP BY
-	pd.category_id
+	pd.category_id,
+	pd.category_name
 
 -- Results:
 	
-category_id|category_type|total_quantity|gross_revenue|total_discounts|total_revenue|
+category_id|category_name|total_quantity|gross_revenue|total_discounts|total_revenue|
 -----------+-------------+--------------+-------------+---------------+-------------+
-          2|Male         |         22482|       714120|       86607.71|    627512.29|
-          1|Female       |         22734|       575333|       69621.43|    505711.57|
+          2|Mens         |         22482|       714120|       86607.71|    627512.29|
+          1|Womens       |         22734|       575333|       69621.43|    505711.57|
           
-
+-- 5. What is the top selling product for each category?
+          
+WITH top_ranking AS         
+(
+	SELECT
+		pd.category_id,
+		pd.category_name,
+		pd.product_name,
+		sum(qty) AS total_quantity,
+		rank() OVER (PARTITION BY pd.category_id ORDER BY sum(qty) desc) AS rnk
+	FROM
+		balanced_tree.product_details AS pd
+	JOIN
+		balanced_tree.sales AS s ON s.prod_id = pd.product_id
+	GROUP BY
+		pd.category_id,
+		pd.product_name,
+		pd.category_name
+)
+SELECT
+	category_id,
+	category_name,
+	product_name AS top_ranking_products,
+	total_quantity
+FROM 
+	top_ranking
+WHERE
+	rnk = 1
+          
+-- Results:
+	
+category_id|category_name|top_ranking_products        |total_quantity|
+-----------+-------------+----------------------------+--------------+
+          1|Womens       |Grey Fashion Jacket - Womens|          3876|
+          2|Mens         |Blue Polo Shirt - Mens      |          3819|
 
 
 
