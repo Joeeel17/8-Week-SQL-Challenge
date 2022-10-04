@@ -277,9 +277,46 @@ membership_status|avg_revenue|
 Non-Member       |     452.01|
 Member           |     454.14|
                   
+-- C.  Transaction Analysis                  
                   
-                  
-                  
+-- 1. What are the top 3 products by total revenue before discount?
+
+SELECT
+	pd.product_name,
+	sum(s.price * s.qty) AS total_revenue
+FROM
+	balanced_tree.sales AS s
+JOIN
+	balanced_tree.product_details AS pd ON pd.product_id = s.prod_id
+GROUP BY
+	pd.product_name
+ORDER BY
+	total_revenue DESC
+LIMIT 3;
+
+-- Results:
+
+product_name                |total_revenue|
+----------------------------+-------------+
+Blue Polo Shirt - Mens      |       217683|
+Grey Fashion Jacket - Womens|       209304|
+White Tee Shirt - Mens      |       152000|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                   
                   
                   
