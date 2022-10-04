@@ -365,6 +365,10 @@ segment_id|top_ranking_products         |total_quantity|
 
 SELECT
 	pd.category_id,
+	CASE
+		WHEN pd.category_id = 1 THEN 'Female'
+		ELSE 'Male'
+	END AS category_type,
 	sum(s.qty) AS total_quantity,
 	sum(s.price * s.qty) AS gross_revenue,
 	round(sum((s.price * s.qty) * (s.discount::NUMERIC / 100)), 2) AS total_discounts,
@@ -378,10 +382,12 @@ GROUP BY
 
 -- Results:
 	
-category_id|total_quantity|gross_revenue|total_discounts|total_revenue|
------------+--------------+-------------+---------------+-------------+
-          2|         22482|       714120|       86607.71|    627512.29|
-          1|         22734|       575333|       69621.43|    505711.57|
+category_id|category_type|total_quantity|gross_revenue|total_discounts|total_revenue|
+-----------+-------------+--------------+-------------+---------------+-------------+
+          2|Male         |         22482|       714120|       86607.71|    627512.29|
+          1|Female       |         22734|       575333|       69621.43|    505711.57|
+          
+
 
 
 
