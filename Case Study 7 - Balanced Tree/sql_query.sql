@@ -326,7 +326,40 @@ segment_id|total_quantity|gross_revenue|total_discounts|total_revenue|
          4|         11385|       366983|       44277.46|    322705.54|
          6|         11217|       307977|       37013.44|    270963.56|
 
+-- 3. What is the top selling product for each segment?
 
+WITH top_ranking AS         
+(
+	SELECT
+		pd.segment_id,
+		pd.product_name,
+		sum(qty) AS total_quantity,
+		rank() OVER (PARTITION BY pd.segment_id ORDER BY sum(qty) desc) AS rnk
+	FROM
+		balanced_tree.product_details AS pd
+	JOIN
+		balanced_tree.sales AS s ON s.prod_id = pd.product_id
+	GROUP BY
+		pd.segment_id,
+		pd.product_name
+)
+SELECT
+	segment_id,
+	product_name AS top_ranking_products,
+	total_quantity
+FROM 
+	top_ranking
+WHERE
+	rnk = 1
+	
+-- Results:
+	
+segment_id|top_ranking_products         |total_quantity|
+----------+-----------------------------+--------------+
+         3|Navy Oversized Jeans - Womens|          3856|
+         4|Grey Fashion Jacket - Womens |          3876|
+         5|Blue Polo Shirt - Mens       |          3819|
+         6|Navy Solid Socks - Mens      |          3792|
 
 
 
