@@ -361,11 +361,27 @@ segment_id|top_ranking_products         |total_quantity|
          5|Blue Polo Shirt - Mens       |          3819|
          6|Navy Solid Socks - Mens      |          3792|
 
+-- 4. What is the total quantity, revenue and discount for each category?
 
+SELECT
+	pd.category_id,
+	sum(s.qty) AS total_quantity,
+	sum(s.price * s.qty) AS gross_revenue,
+	round(sum((s.price * s.qty) * (s.discount::NUMERIC / 100)), 2) AS total_discounts,
+	round(sum((s.price * s.qty) * (1 - discount::NUMERIC / 100)), 2) AS total_revenue
+FROM
+	balanced_tree.product_details AS pd
+JOIN
+	balanced_tree.sales AS s ON s.prod_id = pd.product_id
+GROUP BY
+	pd.category_id
 
-
-
-
+-- Results:
+	
+category_id|total_quantity|gross_revenue|total_discounts|total_revenue|
+-----------+--------------+-------------+---------------+-------------+
+          2|         22482|       714120|       86607.71|    627512.29|
+          1|         22734|       575333|       69621.43|    505711.57|
 
 
 
