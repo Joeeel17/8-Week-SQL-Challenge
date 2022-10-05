@@ -537,13 +537,66 @@ category_id|category_name|total_revenue|revenue_percentage|
           1|Womens       |    505711.57|             44.63|
           2|Mens         |    627512.29|             55.37|
          
+-- 9.  What is the total transaction “penetration” for each product? 
+-- (hint: penetration = number of transactions where at least 1 quantity of a product was purchased divided by total number of transactions)    
+
+SELECT
+	product_name,
+	n_sold AS n_items_sold,
+	round(100 * (n_sold::numeric / total_transactions), 2) AS product_penetration
+from
+     (SELECT
+		pd.product_id,
+		pd.product_name,
+		count(DISTINCT txn_id) AS n_sold,
+		(SELECT count(DISTINCT txn_id) FROM balanced_tree.sales) AS total_transactions
+	FROM
+		balanced_tree.sales AS s
+	JOIN 
+		balanced_tree.product_details AS pd ON pd.product_id = s.prod_id
+	GROUP BY
+		pd.product_id,
+		pd.product_name) AS tmp
+GROUP BY 
+	product_name,
+	n_items_sold,
+	product_penetration
+ORDER BY
+	product_penetration desc
          
-         
-         
-         
+-- Results:
+
+product_name                    |n_items_sold|product_penetration|
+--------------------------------+------------+-------------------+
+Navy Solid Socks - Mens         |        1281|              51.24|
+Grey Fashion Jacket - Womens    |        1275|              51.00|
+Navy Oversized Jeans - Womens   |        1274|              50.96|
+Blue Polo Shirt - Mens          |        1268|              50.72|
+White Tee Shirt - Mens          |        1268|              50.72|
+Pink Fluro Polkadot Socks - Mens|        1258|              50.32|
+Indigo Rain Jacket - Womens     |        1250|              50.00|
+Khaki Suit Jacket - Womens      |        1247|              49.88|
+Black Straight Jeans - Womens   |        1246|              49.84|
+Cream Relaxed Jeans - Womens    |        1243|              49.72|
+White Striped Socks - Mens      |        1243|              49.72|
+Teal Button Up Shirt - Mens     |        1242|              49.68|
+
+
          
 
                   
                   
                   
        
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
