@@ -470,8 +470,78 @@ segment_id|segment_name|product_id|product_name                    |total_revenu
          6|Socks       |2feb6b    |Pink Fluro Polkadot Socks - Mens|     96377.73|             35.57|
          6|Socks       |f084eb    |Navy Solid Socks - Mens         |    119861.64|             44.24|
          6|Socks       |b9a74d    |White Striped Socks - Mens      |     54724.19|             20.20|
+         
+-- 7. What is the percentage split of revenue by segment for each category?
 
+SELECT
+	segment_id,
+	segment_name,
+	category_id,
+	category_name,
+	total_revenue,
+	round(100 * (total_revenue / sum(total_revenue)OVER(PARTITION BY category_id)), 2) AS revenue_percentage
+FROM
+     (SELECT
+		pd.segment_id,
+		pd.segment_name,
+		pd.category_id,
+		pd.category_name,
+		round(sum((s.price * s.qty) * (1 - discount::NUMERIC / 100)), 2) AS total_revenue
+	FROM
+		balanced_tree.product_details AS pd
+	JOIN
+		balanced_tree.sales AS s ON s.prod_id = pd.product_id
+	GROUP BY 
+		pd.category_id,
+		pd.category_name,
+		pd.segment_id,
+		pd.segment_name
+	ORDER BY
+		segment_id) AS tmp
 
+-- Results:
+		
+segment_id|segment_name|category_id|category_name|total_revenue|revenue_percentage|
+----------+------------+-----------+-------------+-------------+------------------+
+         3|Jeans       |          1|Womens       |    183006.03|             36.19|
+         4|Jacket      |          1|Womens       |    322705.54|             63.81|
+         5|Shirt       |          2|Mens         |    356548.73|             56.82|
+         6|Socks       |          2|Mens         |    270963.56|             43.18|
+         
+-- 8.  What is the percentage split of total revenue by category?        
+         
+ SELECT
+	category_id,
+	category_name,
+	total_revenue,
+	round(100 * (total_revenue / sum(total_revenue)OVER()), 2) AS revenue_percentage
+FROM
+     (SELECT
+		pd.category_id,
+		pd.category_name,
+		round(sum((s.price * s.qty) * (1 - discount::NUMERIC / 100)), 2) AS total_revenue
+	FROM
+		balanced_tree.product_details AS pd
+	JOIN
+		balanced_tree.sales AS s ON s.prod_id = pd.product_id
+	GROUP BY 
+		pd.category_id,
+		pd.category_name
+	ORDER BY
+		category_id) AS tmp        
+         
+-- Results:
+
+category_id|category_name|total_revenue|revenue_percentage|
+-----------+-------------+-------------+------------------+
+          1|Womens       |    505711.57|             44.63|
+          2|Mens         |    627512.29|             55.37|
+         
+         
+         
+         
+         
+         
 
                   
                   
