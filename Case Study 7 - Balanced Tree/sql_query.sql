@@ -652,6 +652,33 @@ product_1                   |product_2                  |product_3             |
 ----------------------------+---------------------------+----------------------+---------------------+
 Grey Fashion Jacket - Womens|Teal Button Up Shirt - Mens|White Tee Shirt - Mens|                  352|
 	
+-- D.  Bonus Challenge
+
+-- Use a single SQL query to transform the product_hierarchy and product_prices datasets to the product_details table.
+	
+SELECT
+	pp.product_id,
+	pp.price,
+	ph.level_text || 
+		' - ' || 
+		CASE
+			WHEN ph.parent_id = 1 OR  ph.parent_id = 3 OR ph.parent_id = 4 THEN 'Womens'
+			ELSE 'Mens'
+		END AS product_name,
+	CASE
+		WHEN ph.parent_id = 1 OR  ph.parent_id = 3 OR ph.parent_id = 4 THEN 'Womens'
+		ELSE 'Mens'
+	END AS product_name
+FROM 
+	balanced_tree.product_hierarchy AS ph
+JOIN
+	balanced_tree.product_prices AS pp ON ph.id = pp.id
+	
+	
+	
+	
+	
+	
 	
 	
 	
