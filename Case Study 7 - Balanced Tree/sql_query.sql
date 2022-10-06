@@ -666,15 +666,48 @@ SELECT
 			ELSE 'Mens'
 		END AS product_name,
 	CASE
+		WHEN ph.parent_id = 1 OR  ph.parent_id = 3 OR ph.parent_id = 4 THEN 1
+		ELSE 2
+	END AS category_id,
+	CASE
+		WHEN ph.parent_id = 3 THEN 3
+		WHEN ph.parent_id = 4 THEN 4
+		WHEN ph.parent_id = 5 THEN 5
+		WHEN ph.parent_id = 6 THEN 6
+	END AS segment_id,
+	pp.id AS style_id,
+	CASE
 		WHEN ph.parent_id = 1 OR  ph.parent_id = 3 OR ph.parent_id = 4 THEN 'Womens'
 		ELSE 'Mens'
-	END AS product_name
+	END AS category_name,
+	CASE
+		WHEN ph.parent_id = 3 THEN 'Jeans'
+		WHEN ph.parent_id = 4 THEN 'Jacket'
+		WHEN ph.parent_id = 5 THEN 'Shirt'
+		WHEN ph.parent_id = 6 THEN 'Socks'
+	END AS segment_name,
+	ph.level_text AS style_name
 FROM 
 	balanced_tree.product_hierarchy AS ph
 JOIN
 	balanced_tree.product_prices AS pp ON ph.id = pp.id
 	
-	
+-- Results:
+
+product_id|price|product_name              |category_id|segment_id|style_id|category_name|segment_name|style_name         |
+----------+-----+--------------------------+-----------+----------+--------+-------------+------------+-------------------+
+c4a632    |   13|Navy Oversized - Womens   |          1|         3|       7|Womens       |Jeans       |Navy Oversized     |
+e83aa3    |   32|Black Straight - Womens   |          1|         3|       8|Womens       |Jeans       |Black Straight     |
+e31d39    |   10|Cream Relaxed - Womens    |          1|         3|       9|Womens       |Jeans       |Cream Relaxed      |
+d5e9a6    |   23|Khaki Suit - Womens       |          1|         4|      10|Womens       |Jacket      |Khaki Suit         |
+72f5d4    |   19|Indigo Rain - Womens      |          1|         4|      11|Womens       |Jacket      |Indigo Rain        |
+9ec847    |   54|Grey Fashion - Womens     |          1|         4|      12|Womens       |Jacket      |Grey Fashion       |
+5d267b    |   40|White Tee - Mens          |          2|         5|      13|Mens         |Shirt       |White Tee          |
+c8d436    |   10|Teal Button Up - Mens     |          2|         5|      14|Mens         |Shirt       |Teal Button Up     |
+2a2353    |   57|Blue Polo - Mens          |          2|         5|      15|Mens         |Shirt       |Blue Polo          |
+f084eb    |   36|Navy Solid - Mens         |          2|         6|      16|Mens         |Socks       |Navy Solid         |
+b9a74d    |   17|White Striped - Mens      |          2|         6|      17|Mens         |Socks       |White Striped      |
+2feb6b    |   29|Pink Fluro Polkadot - Mens|          2|         6|      18|Mens         |Socks       |Pink Fluro Polkadot|
 	
 	
 	
