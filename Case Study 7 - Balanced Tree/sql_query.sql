@@ -581,15 +581,76 @@ Cream Relaxed Jeans - Womens    |        1243|              49.72|
 White Striped Socks - Mens      |        1243|              49.72|
 Teal Button Up Shirt - Mens     |        1242|              49.68|
 
+-- 10. What is the most common combination of at least 1 quantity of any 3 products in a 1 single transaction?
 
-         
+/*
+ * This question had me stumped and I was not able to get it quite right.  After some searching and studying, I 
+ * found a great working example done by https://github.com/muryulia/.  By following her example, I was able to understand
+ * the logic behind her answer.
+ * 
+ * This is a combinatorics question. https://mathworld.wolfram.com/Combinatorics.html
+ * 
+ * You essentially make EVERY possible 3 product combination and count how many times each set occurs, apply a row number using a window
+ * function and pick the first one.  I will attempt to comment the code to explain how it works.   
+ * 
+ */
 
-                  
-                  
-                  
-       
+-- Select the 3 item combination and the count of the amount of times items where bought together.               
+SELECT
+  product_1,
+  product_2,
+  product_3,
+  times_bought_together
+FROM
+  (
+  	-- Create a CTE that joins the Sales table with the Product Details table and gather the
+  	-- transaction id's and product names.
+    with products AS(
+    	SELECT
+        	txn_id,
+        	product_name
+      	FROM
+        	balanced_tree.sales AS s
+      	JOIN balanced_tree.product_details AS pd ON s.prod_id = pd.product_id
+    )
+    -- Use self-joins to create every combination of products.  Each column is derived from its own table.
+    SELECT
+    	p.product_name AS product_1,
+      	p1.product_name AS product_2,
+      	p2.product_name AS product_3,
+      	COUNT(*) AS times_bought_together,
+      	ROW_NUMBER() OVER(ORDER BY COUNT(*) DESC) AS rank -- Use a window function to apply a unique row number to each permutation.
+    FROM
+    	products AS p
+    JOIN 
+    	products AS p1 ON p.txn_id = p1.txn_id -- Self-join table 1 to table 2
+    AND 
+    	p.product_name != p1.product_name -- Ensure that we DO NOT duplicate items.
+    AND 
+    	p.product_name < p1.product_name -- Self-join table 1 to table 3
+    JOIN 
+    	products AS p2 ON p.txn_id = p2.txn_id
+    AND 
+    	p.product_name != p2.product_name -- Ensure that we DO NOT duplicate items in the first table.
+    AND 
+    	p1.product_name != p2.product_name -- Ensure that we DO NOT duplicate items in the second table.
+    AND 
+    	p.product_name < p2.product_name
+    AND 
+    	p1.product_name < p2.product_name
+    GROUP BY
+      p.product_name,
+      p1.product_name,
+      p2.product_name
+  ) AS tmp
+WHERE
+  RANK = 1 -- Filter only the highest ranking item.     
 	
-	
+-- Results:
+
+product_1                   |product_2                  |product_3             |times_bought_together|
+----------------------------+---------------------------+----------------------+---------------------+
+Grey Fashion Jacket - Womens|Teal Button Up Shirt - Mens|White Tee Shirt - Mens|                  352|
 	
 	
 	
