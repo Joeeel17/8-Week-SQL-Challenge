@@ -40,7 +40,37 @@ _month|_year|month_year|interest_id|composition|index_value|ranking|percentile_r
 8     |2018 |2018-08-01|6218       |       5.52|       2.84|      1|             99.87|
 12    |2018 |2018-12-01|41548      |      10.46|       4.42|      1|              99.9|
 
+-- 2. What is count of records in the fresh_segments.interest_metrics for each month_year value sorted in chronological order (earliest to latest) with the null values appearing first?
 
+SELECT
+	month_year,
+	count(*) as month_year_count
+FROM
+	fresh_segments.interest_metrics
+GROUP BY
+	month_year
+ORDER BY 
+	month_year ASC NULLS first
+	
+-- Results:
+	
+month_year|month_year_count|
+----------+----------------+
+          |            1194|
+2018-07-01|             729|
+2018-08-01|             767|
+2018-09-01|             780|
+2018-10-01|             857|
+2018-11-01|             928|
+2018-12-01|             995|
+2019-01-01|             973|
+2019-02-01|            1121|
+2019-03-01|            1136|
+2019-04-01|            1099|
+2019-05-01|             857|
+2019-06-01|             824|
+2019-07-01|             864|
+2019-08-01|            1149|
 
 
 
