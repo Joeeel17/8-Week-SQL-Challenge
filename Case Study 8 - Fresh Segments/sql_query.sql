@@ -163,6 +163,57 @@ select
 not_in_map|not_in_metric|
 ----------+-------------+
          0|            7|
+         
+-- 5. Summarise the id values in the fresh_segments.interest_map by its total record count in this table (check for duplicates/unique keys)
+
+-- 5a. What is the number of records?
+
+SELECT 
+	count(*) AS n_id
+FROM
+	fresh_segments.interest_map;
+
+-- Results:
+
+n_id|
+----+
+1209|
+
+-- 5b. Check for difference in the number of unique id's?
+
+WITH check_count AS 
+(
+	SELECT 
+		id,
+		count(*) AS n_id
+	FROM
+		fresh_segments.interest_map
+	GROUP BY 
+		id
+)
+SELECT
+	n_id,
+	count(*)
+FROM
+	check_count
+GROUP BY
+	n_id
+	
+-- Results: (This verifies that the id's are unique)
+	
+n_id|count|
+----+-----+
+   1| 1209|
+	
+	
+
+
+
+
+
+
+
+
 
 
 
