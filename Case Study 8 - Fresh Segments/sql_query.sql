@@ -89,5 +89,59 @@ month_year|month_year_count|
  * 
  * If the removal percentage if high, this could be unacceptable as it may produce unreliable results.
  * For this exercise, the null values will be removed as we are unable to accurately apply a date to the records.
+ * 
  */
+
+-- Let's check the initial NULL count.
+
+SELECT
+	count(*) AS null_count
+FROM
+	fresh_segments.interest_metrics
+WHERE
+	month_year IS NULL;
+
+-- Results:
+
+null_count|
+----------+
+      1194|
+
+-- Delete records with null values and recheck the count.
+
+DELETE
+FROM 
+	fresh_segments.interest_metrics
+WHERE
+	month_year IS NULL;
+
+SELECT
+	count(*) AS null_count
+FROM
+	fresh_segments.interest_metrics
+WHERE
+	month_year IS NULL;
+
+-- Results:
+
+null_count|
+----------+
+         0|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
