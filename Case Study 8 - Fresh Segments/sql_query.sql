@@ -305,15 +305,6 @@ WITH persistent_interests AS (
 		)
 )
 SELECT
-	interest_id
-FROM
-	persistent_interests
-ORDER BY
-		interest_id::numeric ASC
-LIMIT 5;
-
-
-SELECT
 	count(*) AS n_interests
 FROM
 	persistent_interests
@@ -332,6 +323,7 @@ FROM
 	persistent_interests
 ORDER BY
 		interest_id::numeric ASC
+LIMIT 5;
 
 -- Results:
 		
@@ -342,6 +334,97 @@ interest_id|
 6          |
 12         |
 15         |
+
+-- 2. Using this same total_months measure - calculate the cumulative percentage of all records starting at 
+-- 14 months - which total_months value passes the 90% cumulative percentage value?
+
+-- This questions requires us to first get the count of id's per month for 14 months.
+
+WITH cte_total_months AS (
+	SELECT 
+		interest_id,
+		count(DISTINCT month_year) AS total_months
+	FROM
+		fresh_segments.interest_metrics
+	GROUP BY
+		interest_id
+)
+SELECT
+	total_months,
+	count(*) AS n_ids
+FROM
+	cte_total_months
+GROUP BY
+	total_months
+ORDER BY
+	total_months desc
+
+-- Results:
+	
+total_months|n_ids|
+------------+-----+
+          14|  480|
+          13|   82|
+          12|   65|
+          11|   94|
+          10|   86|
+           9|   95|
+           8|   67|
+           7|   90|
+           6|   33|
+           5|   38|
+           4|   32|
+           3|   15|
+           2|   12|
+           1|   13|
+           
+-- Using the previous CTE, we can answer the question.
+           
+WITH cte_total_months AS (
+	SELECT 
+		interest_id,
+		count(DISTINCT month_year) AS total_months
+	FROM
+		fresh_segments.interest_metrics
+	GROUP BY
+		interest_id
+),
+-- Get the percentages for each month_year
+cte_cumalative_perc AS (
+	SELECT
+		total_months,
+		count(*) AS n_ids,
+		-- by using the OVER clause, we can next aggregate functions.
+		round(100 * sum(count(*)) OVER (ORDER BY total_months desc) / sum(count(*)) over(), 2) AS cumalative_perc
+	FROM
+		cte_total_months
+	GROUP BY
+		total_months
+	ORDER BY total_months DESC
+)
+-- Select results that are >= 90%
+SELECT
+	total_months,
+	n_ids,
+	cumalative_perc
+FROM
+	cte_cumalative_perc
+WHERE 
+	cumalative_perc >= 90;
+
+-- Results:
+
+total_months|n_ids|cumalative_perc|
+------------+-----+---------------+
+           6|   33|          90.85|
+           5|   38|          94.01|
+           4|   32|          96.67|
+           3|   15|          97.92|
+           2|   12|          98.92|
+           1|   13|         100.00|
+
+
+
 
 
 
