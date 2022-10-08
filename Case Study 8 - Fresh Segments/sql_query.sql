@@ -72,7 +72,22 @@ month_year|month_year_count|
 2019-07-01|             864|
 2019-08-01|            1149|
 
+-- 3. What do you think we should do with these null values in the fresh_segments.interest_metrics
 
-
-
+/*
+ * How to handle missing values?  There are different ways to handle missing values.  We can fill missing values with
+ *  
+ * 1. Mean, Median or Mode.
+ * 		- Numerical Data: Mean/Median
+ * 		- Categorical Data: Mode
+ * 2. Backfill/ForwardFill (Using the previous or next value)
+ * 3. Interpolate. To infer value from datapoints and/or patterns.
+ * 
+ * However, if it is not possible to replace, then you must
+ * 
+ * 4.  Remove missing values.
+ * 
+ * If the removal percentage if high, this could be unacceptable as it may produce unreliable results.
+ * For this exercise, the null values will be removed as we are unable to accurately apply a date to the records.
+ */
 
