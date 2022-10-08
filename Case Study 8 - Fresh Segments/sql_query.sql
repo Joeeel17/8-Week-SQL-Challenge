@@ -394,7 +394,7 @@ cte_cumalative_perc AS (
 	SELECT
 		total_months,
 		count(*) AS n_ids,
-		-- by using the OVER clause, we can next aggregate functions.
+		-- by using the OVER clause, we can nest aggregate functions.
 		round(100 * sum(count(*)) OVER (ORDER BY total_months desc) / sum(count(*)) over(), 2) AS cumalative_perc
 	FROM
 		cte_total_months
@@ -460,12 +460,60 @@ rows_removed|
 ------------+
          400|
 
+-- 4. Does this decision make sense to remove these data points from a business perspective? Use an example where 
+-- there are all 14 months present to a removed interest example for your arguments - think about what it means to have 
+-- less months present from a segment perspective.
 
+-- If we were to remove the data points, we have a higher chance of attracting more customers because of the targeted interests.
+         
+-- 5.  After removing these interests - how many unique interests are there for each month?
 
-
-
-
-
+WITH cte_total_months AS (
+	SELECT 
+		interest_id,
+		count(DISTINCT month_year) AS total_months
+	FROM
+		fresh_segments.interest_metrics
+	GROUP BY
+		interest_id
+	HAVING
+		count(DISTINCT month_year) >= 6
+)
+SELECT
+	month_year,
+	count(interest_id) AS n_interests
+FROM
+	fresh_segments.interest_metrics
+WHERE
+	interest_id IN (
+		SELECT
+			interest_id
+		FROM
+			cte_total_months
+	)
+GROUP BY 
+	month_year
+ORDER BY
+	month_year
+	
+-- Results:
+	
+month_year|n_interests|
+----------+-----------+
+2018-07-01|        709|
+2018-08-01|        752|
+2018-09-01|        774|
+2018-10-01|        853|
+2018-11-01|        925|
+2018-12-01|        986|
+2019-01-01|        966|
+2019-02-01|       1072|
+2019-03-01|       1078|
+2019-04-01|       1035|
+2019-05-01|        827|
+2019-06-01|        804|
+2019-07-01|        836|
+2019-08-01|       1062|
 
 	
 
