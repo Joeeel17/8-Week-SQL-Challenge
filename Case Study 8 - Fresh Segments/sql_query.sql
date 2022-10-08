@@ -289,8 +289,71 @@ n_records|
       
 -- 1.  Which interests have been present in all month_year dates in our dataset?
 
+WITH persistent_interests AS (
+	SELECT 
+		interest_id
+	FROM
+		fresh_segments.interest_metrics
+	GROUP BY
+		interest_id
+	HAVING
+		count(DISTINCT month_year) = (
+			SELECT 
+				count(DISTINCT month_year)
+			FROM 
+				fresh_segments.interest_metrics
+		)
+)
+SELECT
+	interest_id
+FROM
+	persistent_interests
+ORDER BY
+		interest_id::numeric ASC
+LIMIT 5;
 
 
+SELECT
+	count(*) AS n_interests
+FROM
+	persistent_interests
+	
+-- Results:
+	
+n_interests|
+-----------+
+        480|
+        
+-- 1a. To see individual id's (limited to 5 for brevity)
+        
+SELECT
+	interest_id
+FROM
+	persistent_interests
+ORDER BY
+		interest_id::numeric ASC
+
+-- Results:
+		
+interest_id|
+-----------+
+4          |
+5          |
+6          |
+12         |
+15         |
+
+
+
+
+
+
+
+
+
+
+
+	
 
 
 
