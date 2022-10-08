@@ -128,18 +128,41 @@ null_count|
 ----------+
          0|
 
+-- 4. How many interest_id values exist in the fresh_segments.interest_metrics table but not in the fresh_segments.interest_map table? What about the other way around?
+         
+select         
+	(SELECT
+		count(interest_id) AS n_metrics_ids
+	FROM
+		fresh_segments.interest_metrics
+	WHERE NOT EXISTS 
+	(
+		SELECT 
+			id 
+		FROM 
+			fresh_segments.interest_map
+		WHERE
+			fresh_segments.interest_metrics.interest_id::numeric = fresh_segments.interest_map.id	
+	)) AS not_in_map,	
+	(SELECT
+		count(id) AS n_map_ids
+	FROM
+		fresh_segments.interest_map
+	WHERE NOT EXISTS 
+	(
+		SELECT 
+			interest_id 
+		FROM 
+			fresh_segments.interest_metrics
+		WHERE
+			fresh_segments.interest_metrics.interest_id::numeric = fresh_segments.interest_map.id	
+	)) AS not_in_metric
 
-
-
-
-
-
-
-
-
-
-
-
+-- Results:
+	
+not_in_map|not_in_metric|
+----------+-------------+
+         0|            7|
 
 
 
