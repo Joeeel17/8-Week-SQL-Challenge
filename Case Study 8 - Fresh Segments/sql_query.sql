@@ -423,11 +423,42 @@ total_months|n_ids|cumalative_perc|
            2|   12|          98.92|
            1|   13|         100.00|
 
+-- 3. If we were to remove all interest_id values which are lower than the total_months value we found in the 
+-- previous question - how many total data points would we be removing?
+           
+-- We must exclude the first six months.
 
+WITH cte_total_months AS (
+	SELECT 
+		interest_id,
+		count(DISTINCT month_year) AS total_months
+	FROM
+		fresh_segments.interest_metrics
+	GROUP BY
+		interest_id
+	HAVING
+		count(DISTINCT month_year) < 6
+)
+-- Select results that are < 90%
+SELECT
+	count(*) rows_removed
+FROM
+	fresh_segments.interest_metrics
+WHERE
+	exists(
+		SELECT
+			interest_id
+		FROM
+			cte_total_months
+		WHERE
+			cte_total_months.interest_id = fresh_segments.interest_metrics.interest_id
+	)
 
-
-
-
+-- Results:
+	
+rows_removed|
+------------+
+         400|
 
 
 
