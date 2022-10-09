@@ -844,9 +844,53 @@ month_year|interest_name                                       |avg_composition|
 2018-09-01|Luxury Bedding Shoppers                             |           7.04|
 2018-09-01|Nursing and Physicians Assistant Journal Researchers|           6.70|
 
--- 2. 
+-- 2. For all of these top 10 interests - which interest appears the most often?
 
+WITH get_top_avg_composition AS (
+	SELECT
+		imet.month_year,
+		imet.interest_id,
+		imap.interest_name,
+		round((imet.composition / imet.index_value)::numeric, 2) AS avg_composition,
+		rank() over(PARTITION BY month_year ORDER BY round((imet.composition / imet.index_value)::numeric, 2) desc) AS rnk
+	FROM
+		fresh_segments.interest_metrics AS imet
+	JOIN
+		fresh_segments.interest_map AS imap
+	ON imap.id = imet.interest_id::NUMERIC
+	ORDER BY
+		month_year, avg_composition DESC
+),
+get_top_ten AS (
+	SELECT
+		month_year,
+		interest_name,
+		avg_composition
+	FROM
+		get_top_avg_composition
+	WHERE
+		rnk <= 10
+)
+SELECT
+	interest_name
+FROM
+	(SELECT
+		interest_name,
+		rank() OVER(ORDER BY count(*) DESC) AS rnk
+	FROM
+		get_top_ten
+	GROUP BY
+		interest_name) AS TEMP
+WHERE 
+	rnk = 1;
 
+-- Results:
+
+interest_name           |
+------------------------+
+Luxury Bedding Shoppers |
+Alabama Trip Planners   |
+Solar Energy Researchers|
 
 
 
