@@ -765,9 +765,30 @@ month_year|interest_name                         |percentile_ranking|
 2019-06-01|Personalized Gift Shoppers            |               5.7|
 2019-03-01|Personalized Gift Shoppers            |             73.15|
 
+-- 5. How would you describe our customers in this segment based off their composition and ranking values? 
+-- What sort of products or services should we show to these customers and what should we avoid? 
 
+month_year|interest_id|interest_name                    |composition|rnk|
+----------+-----------+---------------------------------+-----------+---+
+2018-12-01|21057      |Work Comes First Travelers       |       21.2|  1|
+2018-10-01|21057      |Work Comes First Travelers       |      20.28|  2|
+2018-11-01|21057      |Work Comes First Travelers       |      19.45|  3|
+2019-01-01|21057      |Work Comes First Travelers       |      18.99|  4|
+2018-07-01|6284       |Gym Equipment Owners             |      18.82|  5|
+2019-02-01|21057      |Work Comes First Travelers       |      18.39|  6|
+2018-09-01|21057      |Work Comes First Travelers       |      18.18|  7|
+2018-07-01|39         |Furniture Shoppers               |      17.44|  8|
+2018-07-01|77         |Luxury Retail Shoppers           |      17.19|  9|
+2018-10-01|12133      |Luxury Boutique Hotel Researchers|      15.15| 10|
 
-
+/*
+ * Based off of the highest composition values, the average customer appears to be an extroverted, affluent
+ * professional that enjoys the finer things in life.  Traveling, personal development and luxury items attract the most
+ * interest.
+ * 
+ * Avoid any interests that involve sports, gaming and niche hobbies that do not involve travel or physical activity.  
+ * 
+ */
 
 
 
