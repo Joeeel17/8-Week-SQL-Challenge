@@ -622,6 +622,52 @@ month_year|interest_id|interest_name               |composition|rnk|
 2019-06-01|6314       |Online Directory Searchers  |       1.53|  8|
 2019-05-01|36877      |Crochet Enthusiasts         |       1.53|  8|
 
+-- 2. Which 5 interests had the lowest average ranking value?
+
+WITH get_lowest_avgs AS (
+	SELECT
+		ip.interest_name,
+		round(avg(ranking)::numeric, 2) AS avg_ranking,
+		rank() OVER (ORDER BY avg(ranking) desc) AS rnk
+	FROM 
+		filtered_data
+	JOIN
+		fresh_segments.interest_map AS ip
+	ON
+		interest_id::numeric = ip.id
+	GROUP BY
+		ip.interest_name
+)
+SELECT
+	*
+FROM
+	get_lowest_avgs
+WHERE
+	rnk <= 5;
+
+-- Results:
+
+interest_name                                     |avg_ranking|rnk|
+--------------------------------------------------+-----------+---+
+League of Legends Video Game Fans                 |    1037.29|  1|
+Computer Processor and Data Center Decision Makers|     974.13|  2|
+Astrology Enthusiasts                             |     968.50|  3|
+Medieval History Enthusiasts                      |     961.71|  4|
+Budget Mobile Phone Researchers                   |     961.00|  5|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
