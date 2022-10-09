@@ -790,14 +790,61 @@ month_year|interest_id|interest_name                    |composition|rnk|
  * 
  */
 
+-- C.  Index Analysis
 
+-- The index_value is a measure which can be used to reverse calculate the average composition for Fresh Segments’ clients.
 
+-- Average composition can be calculated by dividing the composition column by the index_value column rounded to 2 decimal places.
 
+-- 1. What is the top 10 interests by the average composition for each month?
 
+WITH get_top_avg_composition AS (
+	SELECT
+		imet.month_year,
+		imet.interest_id,
+		imap.interest_name,
+		round((imet.composition / imet.index_value)::numeric, 2) AS avg_composition,
+		rank() over(PARTITION BY month_year ORDER BY round((imet.composition / imet.index_value)::numeric, 2) desc) AS rnk
+	FROM
+		fresh_segments.interest_metrics AS imet
+	JOIN
+		fresh_segments.interest_map AS imap
+	ON imap.id = imet.interest_id::NUMERIC
+	ORDER BY
+		month_year, avg_composition DESC
+)
+SELECT
+	month_year,
+	interest_name,
+	avg_composition
+FROM
+	get_top_avg_composition
+WHERE
+	rnk <= 10;
+	
+-- !!! For this exercise, I will limit it to the top 5 to show more result values !!!
 
+-- Results:
 
+month_year|interest_name                                       |avg_composition|
+----------+----------------------------------------------------+---------------+
+2018-07-01|Las Vegas Trip Planners                             |           7.36|
+2018-07-01|Gym Equipment Owners                                |           6.94|
+2018-07-01|Cosmetics and Beauty Shoppers                       |           6.78|
+2018-07-01|Luxury Retail Shoppers                              |           6.61|
+2018-07-01|Furniture Shoppers                                  |           6.51|
+2018-08-01|Las Vegas Trip Planners                             |           7.21|  <-- New Month/Year
+2018-08-01|Gym Equipment Owners                                |           6.62|
+2018-08-01|Luxury Retail Shoppers                              |           6.53|
+2018-08-01|Furniture Shoppers                                  |           6.30|
+2018-08-01|Cosmetics and Beauty Shoppers                       |           6.28|
+2018-09-01|Work Comes First Travelers                          |           8.26|  <-- New Month/Year
+2018-09-01|Readers of Honduran Content                         |           7.60|
+2018-09-01|Alabama Trip Planners                               |           7.27|
+2018-09-01|Luxury Bedding Shoppers                             |           7.04|
+2018-09-01|Nursing and Physicians Assistant Journal Researchers|           6.70|
 
-
+-- 2. 
 
 
 
