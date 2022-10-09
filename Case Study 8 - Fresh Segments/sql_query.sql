@@ -892,6 +892,63 @@ Luxury Bedding Shoppers |
 Alabama Trip Planners   |
 Solar Energy Researchers|
 
+-- 3. What is the average of the average composition for the top 10 interests for each month?
+
+WITH get_top_avg_composition AS (
+	SELECT
+		imet.month_year,
+		imet.interest_id,
+		imap.interest_name,
+		round((imet.composition / imet.index_value)::numeric, 2) AS avg_composition,
+		rank() over(PARTITION BY month_year ORDER BY round((imet.composition / imet.index_value)::numeric, 2) desc) AS rnk
+	FROM
+		fresh_segments.interest_metrics AS imet
+	JOIN
+		fresh_segments.interest_map AS imap
+	ON imap.id = imet.interest_id::NUMERIC
+	ORDER BY
+		month_year, avg_composition DESC
+),
+get_monthly_avg AS (
+	SELECT
+		month_year,
+		round(avg(avg_composition), 2) AS monthly_cumulative_avg
+	FROM
+		get_top_avg_composition
+	WHERE
+		rnk <= 10
+	GROUP BY
+		month_year
+)
+SELECT
+	*
+FROM
+	get_monthly_avg;
+
+-- Results:
+
+month_year|monthly_cumulative_avg|
+----------+----------------------+
+2018-07-01|                  6.04|
+2018-08-01|                  5.95|
+2018-09-01|                  6.90|
+2018-10-01|                  7.07|
+2018-11-01|                  6.62|
+2018-12-01|                  6.65|
+2019-01-01|                  6.32|
+2019-02-01|                  6.58|
+2019-03-01|                  6.12|
+2019-04-01|                  5.75|
+2019-05-01|                  3.54|
+2019-06-01|                  2.43|
+
+
+
+
+
+
+
+
 
 
 
