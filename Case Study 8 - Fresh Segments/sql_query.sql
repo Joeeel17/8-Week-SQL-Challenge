@@ -655,9 +655,38 @@ Astrology Enthusiasts                             |     968.50|  3|
 Medieval History Enthusiasts                      |     961.71|  4|
 Budget Mobile Phone Researchers                   |     961.00|  5|
 
+-- 3. Which 5 interests had the largest standard deviation in their percentile_ranking value?
 
+WITH get_std_dev AS (
+	SELECT
+		ip.interest_name,
+		round(stddev(percentile_ranking)::numeric, 2) AS std_dev,
+		rank() OVER (ORDER BY stddev(percentile_ranking) desc) AS rnk
+	FROM 
+		filtered_data
+	JOIN
+		fresh_segments.interest_map AS ip
+	ON
+		interest_id::numeric = ip.id
+	GROUP BY
+		ip.interest_name
+)
+SELECT
+	*
+FROM
+	get_std_dev
+WHERE
+	rnk <= 5;
 
+-- Results:
 
+interest_name                         |std_dev|rnk|
+--------------------------------------+-------+---+
+Techies                               |  30.18|  1|
+Entertainment Industry Decision Makers|  28.97|  2|
+Oregon Trip Planners                  |  28.32|  3|
+Personalized Gift Shoppers            |  26.24|  4|
+Tampa and St Petersburg Trip Planners |  25.61|  5|
 
 
 
