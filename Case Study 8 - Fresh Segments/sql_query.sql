@@ -515,7 +515,116 @@ month_year|n_interests|
 2019-07-01|        836|
 2019-08-01|       1062|
 
-	
+-- C.  Segment Analysis	
+
+-- 1. Using our filtered dataset by removing the interests with less than 6 months worth of data, which are the top 10 
+-- and bottom 10 interests which have the largest composition values in any month_year? Only use the maximum composition 
+-- value for each interest but you must keep the corresponding month_year
+
+-- Since we have a few questions to answer, lets create a temp table of the filtered data.
+
+DROP TABLE IF EXISTS filtered_data;
+CREATE TEMP TABLE filtered_data AS (
+	WITH cte_total_months AS (
+		SELECT 
+			interest_id,
+			count(DISTINCT month_year) AS total_months
+		FROM
+			fresh_segments.interest_metrics
+		GROUP BY
+			interest_id
+		HAVING
+			count(DISTINCT month_year) >= 6
+	)
+	SELECT
+		*
+	FROM
+		fresh_segments.interest_metrics
+	WHERE
+		interest_id IN (
+			SELECT
+				interest_id
+			FROM
+				cte_total_months
+		)	
+);
+
+
+WITH get_top_ranking AS (
+	SELECT
+		month_year,
+		interest_id,
+		ip.interest_name,
+		composition,
+		rank() OVER (ORDER BY composition desc) AS rnk
+	FROM 
+		filtered_data
+	JOIN
+		fresh_segments.interest_map AS ip
+	ON
+		interest_id::numeric = ip.id
+)
+SELECT
+	*
+FROM
+	get_top_ranking
+WHERE
+	rnk <= 10;
+
+-- Results:
+
+month_year|interest_id|interest_name                    |composition|rnk|
+----------+-----------+---------------------------------+-----------+---+
+2018-12-01|21057      |Work Comes First Travelers       |       21.2|  1|
+2018-10-01|21057      |Work Comes First Travelers       |      20.28|  2|
+2018-11-01|21057      |Work Comes First Travelers       |      19.45|  3|
+2019-01-01|21057      |Work Comes First Travelers       |      18.99|  4|
+2018-07-01|6284       |Gym Equipment Owners             |      18.82|  5|
+2019-02-01|21057      |Work Comes First Travelers       |      18.39|  6|
+2018-09-01|21057      |Work Comes First Travelers       |      18.18|  7|
+2018-07-01|39         |Furniture Shoppers               |      17.44|  8|
+2018-07-01|77         |Luxury Retail Shoppers           |      17.19|  9|
+2018-10-01|12133      |Luxury Boutique Hotel Researchers|      15.15| 10|
+
+WITH get_bottom_ranking AS (
+	SELECT
+		month_year,
+		interest_id,
+		ip.interest_name,
+		composition,
+		rank() OVER (ORDER BY composition asc) AS rnk
+	FROM 
+		filtered_data
+	JOIN
+		fresh_segments.interest_map AS ip
+	ON
+		interest_id::numeric = ip.id
+)
+SELECT
+	*
+FROM
+	get_bottom_ranking
+WHERE
+	rnk <= 10;
+
+-- Results:
+
+month_year|interest_id|interest_name               |composition|rnk|
+----------+-----------+----------------------------+-----------+---+
+2019-05-01|45524      |Mowing Equipment Shoppers   |       1.51|  1|
+2019-06-01|34083      |New York Giants Fans        |       1.52|  2|
+2019-06-01|35742      |Disney Fans                 |       1.52|  2|
+2019-05-01|20768      |Beer Aficionados            |       1.52|  2|
+2019-05-01|39336      |Philadelphia 76ers Fans     |       1.52|  2|
+2019-05-01|4918       |Gastrointestinal Researchers|       1.52|  2|
+2019-04-01|44449      |United Nations Donors       |       1.52|  2|
+2019-05-01|6127       |LED Lighting Shoppers       |       1.53|  8|
+2019-06-01|6314       |Online Directory Searchers  |       1.53|  8|
+2019-05-01|36877      |Crochet Enthusiasts         |       1.53|  8|
+
+
+
+
 
 
 
