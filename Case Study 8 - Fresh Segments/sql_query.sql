@@ -1010,8 +1010,13 @@ month_year|interest_name                |max_index_composition|3_month_moving_av
 2019-07-01|Las Vegas Trip Planners      |                 2.82|              3.33|Las Vegas Trip Planners: 2.77    |Readers of Honduran Content: 4.41|
 2019-08-01|Cosmetics and Beauty Shoppers|                 2.73|              2.77|Las Vegas Trip Planners: 2.82    |Las Vegas Trip Planners: 2.77    |
 
+-- 5. Provide a possible reason why the max average composition might change from month to month? Could it signal something is not quite 
+-- right with the overall business model for Fresh Segments?
 
-
-
+/*
+ * One possible answer could be seasonal.  People on trips (either on holiday or summer months) don't tend to research trips.  Once trips/vacations start to 
+ * wind down, then its time to plan for the next one.
+ * 
+ */
 
 
