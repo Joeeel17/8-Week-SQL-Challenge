@@ -688,8 +688,82 @@ Oregon Trip Planners                  |  28.32|  3|
 Personalized Gift Shoppers            |  26.24|  4|
 Tampa and St Petersburg Trip Planners |  25.61|  5|
 
+-- 4. For the 5 interests found in the previous question - what was minimum and maximum percentile_ranking values for each interest 
+-- and its corresponding year_month value? Can you describe what is happening for these 5 interests?
 
-
+WITH get_std_dev AS (
+	SELECT
+		interest_id,
+		ip.interest_name,
+		round(stddev(percentile_ranking)::numeric, 2) AS std_dev,
+		rank() OVER (ORDER BY stddev(percentile_ranking) desc) AS rnk
+	FROM 
+		filtered_data
+	JOIN
+		fresh_segments.interest_map AS ip
+	ON
+		interest_id::numeric = ip.id
+	GROUP BY
+		interest_id,
+		ip.interest_name
+),
+-- Reduce the list down to the lowest 5
+get_interest_id AS (
+	SELECT
+		*
+	FROM
+		get_std_dev
+	WHERE
+		rnk <= 5
+),
+-- Get the min and max values via rank or row_number for values in the previous CTE (the lowest 5)
+get_min_max as (
+	SELECT
+		month_year,
+		interest_id,
+		percentile_ranking,
+		rank() over(PARTITION BY interest_id ORDER BY percentile_ranking) AS min_rank,
+		rank() over(PARTITION BY interest_id ORDER BY percentile_ranking desc) AS max_rank
+	FROM
+		filtered_data
+	WHERE 
+		interest_id IN (
+			SELECT
+				interest_id
+			FROM 
+				get_interest_id
+		)
+)
+-- Join the map table to get the interest_name and select all values with the rank of one.
+SELECT
+	gmm.month_year,
+	ip.interest_name,
+	percentile_ranking
+FROM
+	get_min_max AS gmm
+JOIN
+	fresh_segments.interest_map AS ip  ON ip.id = gmm.interest_id::numeric
+WHERE
+	min_rank = 1
+OR
+	max_rank = 1
+ORDER BY
+	interest_id, percentile_ranking
+	
+-- Results:
+	
+month_year|interest_name                         |percentile_ranking|
+----------+--------------------------------------+------------------+
+2019-03-01|Tampa and St Petersburg Trip Planners |              4.84|
+2018-07-01|Tampa and St Petersburg Trip Planners |             75.03|
+2019-08-01|Entertainment Industry Decision Makers|             11.23|
+2018-07-01|Entertainment Industry Decision Makers|             86.15|
+2019-08-01|Techies                               |              7.92|
+2018-07-01|Techies                               |             86.69|
+2019-07-01|Oregon Trip Planners                  |               2.2|
+2018-11-01|Oregon Trip Planners                  |             82.44|
+2019-06-01|Personalized Gift Shoppers            |               5.7|
+2019-03-01|Personalized Gift Shoppers            |             73.15|
 
 
 
