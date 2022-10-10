@@ -262,8 +262,8 @@ FROM
 		current_month) AS tmp
 WHERE
 	deposit_count > 1
-	AND (purchase_count = 1
-		OR withdrawal_count = 1)
+	AND (purchase_count >= 1
+		OR withdrawal_count >= 1)
 GROUP BY
 	current_month
 ORDER BY
@@ -273,10 +273,10 @@ ORDER BY
 
 current_month|customer_count|
 -------------+--------------+
-January      |           115|
-February     |           108|
-March        |           113|
-April        |            50|
+January      |           168|
+February     |           181|
+March        |           192|
+April        |            70|
 
 
 -- 4. What is the closing balance for each customer at the end of the month?
@@ -315,7 +315,7 @@ from
 	(SELECT customer_id,
 	       txn_month,
 	       transaction_amount,
-	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED preceding AND CURRENT ROW) AS closing_balance,
+	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance,
 	       row_number() OVER (PARTITION BY customer_id, txn_month ORDER BY txn_month desc) AS rn
 	FROM closing_balance
 	ORDER BY 
@@ -346,7 +346,23 @@ customer_id|txn_month|transaction_amount|closing_balance|
 	
 -- 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
-
+SELECT 
+	customer_id,
+	txn_month,
+	transaction_amount,
+	closing_balance
+from
+	(SELECT customer_id,
+	       txn_month,
+	       transaction_amount,
+	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance,
+	       row_number() OVER (PARTITION BY customer_id, txn_month ORDER BY txn_month desc) AS rn
+	FROM closing_balance
+	ORDER BY 
+		customer_id,
+		txn_month) AS tmp
+WHERE rn = 1
+LIMIT 15;
 
 
 
