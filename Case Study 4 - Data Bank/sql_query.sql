@@ -346,23 +346,7 @@ customer_id|txn_month|transaction_amount|closing_balance|
 	
 -- 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
-SELECT 
-	customer_id,
-	txn_month,
-	transaction_amount,
-	closing_balance
-from
-	(SELECT customer_id,
-	       txn_month,
-	       transaction_amount,
-	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance,
-	       row_number() OVER (PARTITION BY customer_id, txn_month ORDER BY txn_month desc) AS rn
-	FROM closing_balance
-	ORDER BY 
-		customer_id,
-		txn_month) AS tmp
-WHERE rn = 1
-LIMIT 15;
+
 
 
 
