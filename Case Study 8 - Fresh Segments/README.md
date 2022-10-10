@@ -14,4 +14,4 @@ For this case study there is a total of 2 datasets which you will need to use to
 - <strong>Interest_Map</strong>: This mapping table links the interest_id with their relevant interest information.
 
 ## Entity Relationship Diagram
-![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%201%20-%20Danny's%20Diner/ERD.jpg)
+![alt text](https://github.com/iweld/8-Week-SQL-Challenge/blob/main/Case%20Study%208%20-%20Fresh%20Segments/ERD.JPG)
