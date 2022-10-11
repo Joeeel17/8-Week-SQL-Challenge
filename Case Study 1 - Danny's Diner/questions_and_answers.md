@@ -154,3 +154,88 @@ C   |ramen |  1|
 
 ❗ **Note** customer_id: **B** had a tie with all three items on the menu.
 
+#### 6. Which item was purchased first by the customer after they became a member?
+
+1. Create a CTE and join the sales and menu tables to the members table.
+2. Use the rank window function to rank every item purchased by the customer.
+3. Order the items by the numbers or times purchase in ascending order (lowest to highest).
+4. Filter the results to orders made after becoming a member.
+5. Select customer and product where rank = '1'.
+
+````sql
+WITH cte_first_member_purchase AS
+(
+		SELECT 
+			m.customer_id AS p,
+			m2.product_name AS product,
+			RANK() OVER (PARTITION BY m.customer_id ORDER BY s.order_date) AS rnk
+		FROM 
+			members AS m
+		JOIN 
+			sales AS s 
+		ON s.customer_id = m.customer_id
+		JOIN 
+			menu AS m2 
+		ON 
+			s.product_id = m2.product_id
+		WHERE 
+			s.order_date >= m.join_date
+)
+SELECT 
+	customer,
+	product
+FROM 
+	cte_first_member_purchase
+WHERE 
+	rnk = 1;
+````
+
+**Results:**
+
+customer|product|
+--------|-------|
+A       |curry  |
+B       |sushi  |
+
+#### 6. Which item was purchased first by the customer after they became a member?
+
+1. Create a CTE and join the sales and menu tables to the members table.
+2. Use the rank window function to rank every item purchased by the customer.
+3. Order the items by the numbers or times purchase in ascending order (lowest to highest).
+4. Filter the results to orders made after becoming a member.
+5. Select customer and product where rank = '1'.
+
+````sql
+WITH cte_first_member_purchase AS
+(
+		SELECT 
+			m.customer_id AS p,
+			m2.product_name AS product,
+			RANK() OVER (PARTITION BY m.customer_id ORDER BY s.order_date) AS rnk
+		FROM 
+			members AS m
+		JOIN 
+			sales AS s 
+		ON s.customer_id = m.customer_id
+		JOIN 
+			menu AS m2 
+		ON 
+			s.product_id = m2.product_id
+		WHERE 
+			s.order_date >= m.join_date
+)
+SELECT 
+	customer,
+	product
+FROM 
+	cte_first_member_purchase
+WHERE 
+	rnk = 1;
+````
+
+**Results:**
+
+customer|product|
+--------|-------|
+A       |curry  |
+B       |sushi  |
