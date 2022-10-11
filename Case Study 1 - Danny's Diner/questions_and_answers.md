@@ -262,7 +262,11 @@ B       |          940|
 
 #### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
 
-
+1. Create a CTE and join the sales and menu tables to the members table.
+2. Use a case statement inside of the sum function to calculate total points including 2x multiplier.
+3. If the order is after membship or within the 6 days after membership then use the 2x multiplier on all items. Else, only on sushi.
+4. Filter the results to orders made in Jan 2021.
+5. Group by the customer id.
 
 ````sql
 WITH cte_jan_member_points AS (
