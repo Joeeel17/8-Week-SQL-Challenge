@@ -202,8 +202,8 @@ B       |sushi  |
 
 1. Create a CTE and join the sales and menu tables to the members table.
 2. Get the customer_id, total number of items and the total amount spent.
-4. Filter the results to orders made before the join date.
-5. Group by the customer id.
+3. Filter the results to orders made before the join date.
+4. Group by the customer id.
 
 ````sql
 WITH cte_total_nonmember_purchase AS (
@@ -229,6 +229,11 @@ A       |          2|         25|
 B       |          3|         40|
 
 #### 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+
+1. Create a CTE and join the sales and menu tables to the members table.
+2. Use a case statement inside of the sum function to calculate total points including 2x multiplier.
+3. Filter the results to orders made before the join date.
+4. Group by the customer id.
 
 ````sql
 WITH cte_total_member_points AS (
@@ -256,6 +261,8 @@ A       |          860|
 B       |          940|
 
 #### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+
+
 
 ````sql
 WITH cte_jan_member_points AS (
@@ -288,5 +295,5 @@ ORDER BY customer;
 
 customer|member_points|
 --------|-------------|
-A       |          860|
-B       |          940|
+A       |         1370|
+B       |          820|
