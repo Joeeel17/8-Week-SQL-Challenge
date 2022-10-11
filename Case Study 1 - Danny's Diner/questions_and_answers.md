@@ -159,7 +159,7 @@ C   |ramen |  1|
 1. Create a CTE and join the sales and menu tables to the members table.
 2. Use the rank window function to rank every item purchased by the customer.
 3. Order the items by the numbers or times purchase in ascending order (lowest to highest).
-4. Filter the results to orders made after becoming a member.
+4. Filter the results to orders made after the join date.
 5. Select customer and product where rank = '1'.
 
 ````sql
@@ -197,38 +197,39 @@ customer|product|
 A       |curry  |
 B       |sushi  |
 
-#### 6. Which item was purchased first by the customer after they became a member?
+#### 7. Which item was purchased just before the customer became a member?
 
 1. Create a CTE and join the sales and menu tables to the members table.
 2. Use the rank window function to rank every item purchased by the customer.
-3. Order the items by the numbers or times purchase in ascending order (lowest to highest).
-4. Filter the results to orders made after becoming a member.
+3. Order the items by the numbers or times purchase in descending order (highest to lowest).
+4. Filter the results to orders made before the join date.
 5. Select customer and product where rank = '1'.
 
 ````sql
-WITH cte_first_member_purchase AS
+WITH cte_last_nonmember_purchase AS
 (
 		SELECT 
-			m.customer_id AS p,
+			m.customer_id AS customer,
 			m2.product_name AS product,
-			RANK() OVER (PARTITION BY m.customer_id ORDER BY s.order_date) AS rnk
+			RANK() OVER (PARTITION BY m.customer_id ORDER BY s.order_date DESC) AS rnk
 		FROM 
 			members AS m
 		JOIN 
 			sales AS s 
-		ON s.customer_id = m.customer_id
+		ON 
+			s.customer_id = m.customer_id
 		JOIN 
 			menu AS m2 
 		ON 
 			s.product_id = m2.product_id
 		WHERE 
-			s.order_date >= m.join_date
+			s.order_date < m.join_date
 )
 SELECT 
 	customer,
 	product
 FROM 
-	cte_first_member_purchase
+	cte_last_nonmember_purchase
 WHERE 
 	rnk = 1;
 ````
@@ -237,5 +238,132 @@ WHERE
 
 customer|product|
 --------|-------|
+A       |sushi  |
 A       |curry  |
 B       |sushi  |
+
+#### 8. What is the total items and amount spent for each member before they became a member?
+
+1. Create a CTE and join the sales and menu tables to the members table.
+2. Get the customer_id, total number of items and the total amount spent.
+4. Filter the results to orders made before the join date.
+5. Group by the customer id.
+
+````sql
+WITH cte_total_nonmember_purchase AS
+(
+		SELECT 
+			m.customer_id AS customer,
+			COUNT(m2.product_id) AS total_items,
+			SUM(m2.price) AS total_spent
+		FROM 
+			members AS m
+		JOIN 
+			sales AS s 
+		ON 
+			s.customer_id = m.customer_id
+		JOIN 
+			menu AS m2 
+		ON 
+			s.product_id = m2.product_id
+		WHERE 
+			s.order_date < m.join_date
+		GROUP BY 
+			customer
+)
+SELECT 
+	*
+FROM 
+	cte_total_nonmember_purchase
+ORDER BY 
+	customer;
+````
+
+**Results:**
+
+customer|total_items|total_spent|
+--------|-----------|-----------|
+A       |          2|         25|
+B       |          3|         40|
+
+#### 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+
+````sql
+WITH cte_total_member_points AS
+(
+		SELECT m.customer_id AS customer,
+			SUM(
+					CASE
+						WHEN m2.product_name = 'sushi' 
+							THEN (m2.price * 20)
+						ELSE (m2.price * 10)
+					END
+			) AS member_points
+		FROM 
+			members AS m
+		JOIN 
+			sales AS s 
+			ON s.customer_id = m.customer_id
+		JOIN 
+			menu AS m2 
+			ON s.product_id = m2.product_id
+		GROUP BY 
+			customer
+)
+SELECT 
+	*
+FROM 
+	cte_total_member_points
+````
+
+**Results:**
+
+customer|member_points|
+--------|-------------|
+A       |          860|
+B       |          940|
+
+#### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+
+````sql
+WITH cte_jan_member_points AS
+(
+	SELECT m.customer_id AS customer,
+		SUM(
+			CASE
+				WHEN s.order_date < m.join_date THEN
+					CASE
+						WHEN m2.product_name = 'sushi' 
+							THEN (m2.price * 20)
+						ELSE (m2.price * 10)
+					END
+				WHEN s.order_date > (m.join_date + 6) 
+					THEN 
+						CASE
+							WHEN m2.product_name = 'sushi' 
+								THEN (m2.price * 20)
+							ELSE (m2.price * 10)
+						END 
+				ELSE (m2.price * 20)	
+			END
+		) AS member_points
+		FROM members AS m
+		JOIN sales AS s ON s.customer_id = m.customer_id
+		JOIN menu AS m2 ON s.product_id = m2.product_id
+		WHERE s.order_date <= '2021-01-31'
+		GROUP BY customer
+	)
+SELECT 
+	*
+FROM 
+	cte_jan_member_points
+ORDER BY 
+	customer;
+````
+
+**Results:**
+
+customer|member_points|
+--------|-------------|
+A       |          860|
+B       |          940|
