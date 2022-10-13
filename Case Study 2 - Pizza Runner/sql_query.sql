@@ -15,7 +15,7 @@ We will create a temporary table where all forms of null will be transformed to 
 
 */
 
--- The orginal table consist structure
+-- The orginal table structure
 
 SELECT * FROM customer_orders;
 
