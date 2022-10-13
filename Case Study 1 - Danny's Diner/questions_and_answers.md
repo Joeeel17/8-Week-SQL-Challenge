@@ -273,14 +273,16 @@ WITH cte_jan_member_points AS (
 	SELECT m.customer_id AS customer,
 		SUM(
 			CASE
-				WHEN s.order_date < m.join_date THEN CASE
-					WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
-					ELSE (m2.price * 10)
-				END
-				WHEN s.order_date > (m.join_date + 6) THEN CASE
-					WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
-					ELSE (m2.price * 10)
-				END
+				WHEN s.order_date < m.join_date THEN 
+					CASE
+						WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
+						ELSE (m2.price * 10)
+					END
+				WHEN s.order_date > (m.join_date + 6) THEN 
+					CASE
+						WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
+						ELSE (m2.price * 10)
+					END
 				ELSE (m2.price * 20)
 			END
 		) AS member_points
