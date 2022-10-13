@@ -2,6 +2,8 @@
 ## Questions and Answers
 ### by jaime.m.shaker@gmail.com
 
+###Pizza Metrics
+
 ❗ **Note** ❗
 The customer_order table has inconsistent data types.  We must first clean the data before answering any questions. 
 The exclusions and extras columns contain values that are either 'null' (text), null (data type) or '' (empty).
@@ -36,23 +38,21 @@ order_id|customer_id|pizza_id|exclusions|extras|order_time             |
 ````sql
 DROP TABLE IF EXISTS new_customer_orders;
 CREATE TEMP TABLE new_customer_orders AS (
-	SELECT
-		order_id,
+	SELECT order_id,
 		customer_id,
 		pizza_id,
-	CASE
-		WHEN exclusions = ''
+		CASE
+			WHEN exclusions = ''
 			OR exclusions LIKE 'null' THEN null
-		ELSE exclusions
-	END AS exclusions,
-	CASE
-		WHEN extras = ''
+			ELSE exclusions
+		END AS exclusions,
+		CASE
+			WHEN extras = ''
 			OR extras LIKE 'null' THEN null
-		ELSE extras
-	END AS extras,
+			ELSE extras
+		END AS extras,
 		order_time
-FROM
-	customer_orders
+	FROM customer_orders
 );
       
 SELECT * FROM new_customer_orders;
@@ -84,304 +84,318 @@ The distance and duration columns have text and numbers.  We will remove the tex
 We will convert all 'null' (text) and 'NaN' values in the cancellation column to null (data type).
 We will convert the pickup_time (varchar) column to a timestamp data type.
 
+#### The orginal table structure.
+
+````sql
+SELECT * FROM runner_orders;
+````
+
+**Results:**
+
+order_id|runner_id|pickup_time        |distance|duration  |cancellation           |
+--------|---------|-------------------|--------|----------|-----------------------|
+1|        1|2020-01-01 18:15:34|20km    |32 minutes|                       |
+2|        1|2020-01-01 19:10:54|20km    |27 minutes|                       |
+3|        1|2020-01-03 00:12:37|13.4km  |20 mins   |                       |
+4|        2|2020-01-04 13:53:03|23.4    |40        |                       |
+5|        3|2020-01-08 21:10:57|10      |15        |                       |
+6|        3|null               |null    |null      |Restaurant Cancellation|
+7|        2|2020-01-08 21:30:45|25km    |25mins    |null                   |
+8|        2|2020-01-10 00:15:02|23.4 km |15 minute |null                   |
+9|        2|null               |null    |null      |Customer Cancellation  |
+10|        1|2020-01-11 18:50:20|10km    |10minutes |null                   |
+
+````sql
+DROP TABLE IF EXISTS new_runner_orders;
+CREATE TEMP TABLE new_runner_orders AS (
+	SELECT order_id,
+		runner_id,
+		CASE
+			WHEN pickup_time LIKE 'null' THEN NULL
+			ELSE pickup_time
+		END::timestamp AS pickup_time,
+		-- Return null value if both arguments are equal
+		-- Use regex to match only numeric values and decimal point.
+		-- Convert to numeric datatype
+		NULLIF(regexp_replace(distance, '[^0-9.]', '', 'g'), '')::NUMERIC AS distance,
+		NULLIF(regexp_replace(duration, '[^0-9.]', '', 'g'), '')::NUMERIC AS duration,
+		CASE
+			WHEN cancellation LIKE 'null'
+			OR cancellation LIKE 'NaN'
+			OR cancellation LIKE '' THEN NULL
+			ELSE cancellation
+		END AS cancellation
+	FROM runner_orders
+);
+
+SELECT * FROM new_runner_orders;
+````
+
+**Results:**
+
+order_id|runner_id|pickup_time            |distance|duration|cancellation           |
+--------|---------|-----------------------|--------|--------|-----------------------|
+1|        1|2020-01-01 18:15:34.000|      20|      32|                       |
+2|        1|2020-01-01 19:10:54.000|      20|      27|                       |
+3|        1|2020-01-03 00:12:37.000|    13.4|      20|                       |
+4|        2|2020-01-04 13:53:03.000|    23.4|      40|                       |
+5|        3|2020-01-08 21:10:57.000|      10|      15|                       |
+6|        3|                       |        |        |Restaurant Cancellation|
+7|        2|2020-01-08 21:30:45.000|      25|      25|                       |
+8|        2|2020-01-10 00:15:02.000|    23.4|      15|                       |
+9|        2|                       |        |        |Customer Cancellation  |
+10|        1|2020-01-11 18:50:20.000|      10|      10|                       |
 
 #### 1. What is the total amount each customer spent at the restaurant?
 
 ````sql
-SELECT s.customer_id AS c_id,
-	SUM(m.price) AS total_spent
-FROM sales AS s
-	JOIN menu AS m ON s.product_id = m.product_id
-GROUP BY c_id
-ORDER BY total_spent DESC;
+SELECT
+	count(*) AS n_orders
+FROM
+	new_customer_orders;
 ````
 
 **Results:**
 
-c_id|total_spent|
-----|-----------|
-A   |         76|
-B   |         74|
-C   |         36|
+n_orders|
+--------|
+14|
 
-#### 2. How many days has each customer visited the restaurant?
+#### 2. How many unique customer orders were made?
 
 ````sql
-SELECT customer_id AS c_id,
-	COUNT(DISTINCT order_date) AS n_days
-FROM sales
+SELECT count(DISTINCT order_id) AS n_orders
+FROM new_customer_orders;
+````
+
+**Results:**
+
+n_orders|
+--------|
+10|
+
+
+#### 3. How many successful orders were delivered by each runner?
+
+1. Count only completed orders.
+
+````sql
+SELECT runner_id,
+	count(order_id) AS n_orders
+FROM new_runner_orders
+WHERE cancellation IS NULL
+GROUP BY runner_id
+ORDER BY n_orders DESC;
+````
+
+**Results:**
+
+runner_id|n_orders|
+---------|--------|
+1|       4|
+2|       3|
+3|       1|
+
+#### 4. How many of each type of pizza was delivered?
+
+1. Join the pizza_names table to customer_orders to count pizza types.
+2. Join runner_order to count number of completed deliveries.
+3. Filter out any cancelled orders.
+
+````sql
+SELECT p.pizza_name,
+	count(c.*) AS n_pizza_type
+FROM new_customer_orders AS c
+	JOIN pizza_names AS p ON p.pizza_id = c.pizza_id
+	JOIN new_runner_orders AS r ON c.order_id = r.order_id
+WHERE cancellation IS NULL
+GROUP BY p.pizza_name
+ORDER BY n_pizza_type DESC;
+````
+
+**Results:**
+
+pizza_name|n_pizza_type|
+----------|------------|
+Meatlovers|           9|
+Vegetarian|           3|
+
+#### 5. How many Vegetarian and Meatlovers were ordered by each customer?
+
+1. Use a case statement to get the sum total of all meat_lovers pizzas ordered.
+2. Use a case statement to get the sum total of all vegetarian pizzas ordered.
+3. Group by customer_id
+4. Order by customer_id  in ascending order.
+
+````sql
+SELECT customer_id,
+	sum(
+		CASE
+			WHEN pizza_id = 1 THEN 1
+			ELSE 0
+		END
+	) AS meat_lovers,
+	sum(
+		CASE
+			WHEN pizza_id = 2 THEN 1
+			ELSE 0
+		END
+	) AS vegetarian
+FROM new_customer_orders
 GROUP BY customer_id
-ORDER BY n_days DESC;
+ORDER BY customer_id;
 ````
 
 **Results:**
 
-c_id|n_days|
-----|------|
-B   |     6|
-A   |     4|
-C   |     2|
+customer_id|meat_lovers|vegetarian|
+-----------|-----------|----------|
+101|          2|         1|
+102|          2|         1|
+103|          3|         1|
+104|          3|         0|
+105|          0|         1|
 
+#### 6. What was the maximum number of pizzas delivered in a single order?
 
-#### 3. What was the first item from the menu purchased by each customer?
-
-1. Create a CTE and join the sales and menu tables.
-2. Use the row_number window function to give a unique row number to every item purchased by the customer.
-3. Order the items by the order_date
-4.  Select customer_id and product_name for every item where the row_number is '1'
+1. Create a CTE and join the customer_orders tables to the runners_order table.
+2. Get all completed orders and group by customer_id.
+3. Select max order count from cte.
 
 ````sql
-WITH cte_first_order AS (
-	SELECT s.customer_id AS c_id,
-		m.product_name,
-		ROW_NUMBER() OVER (
-			PARTITION BY s.customer_id
-			ORDER BY s.order_date,
-				s.product_id
-		) AS rn
-	FROM sales AS s
-		JOIN menu AS m ON s.product_id = m.product_id
+WITH cte_order_count AS (
+	SELECT c.order_id,
+		count(c.pizza_id) AS n_orders
+	FROM new_customer_orders AS c
+		JOIN new_runner_orders AS r ON c.order_id = r.order_id
+	WHERE r.cancellation IS NULL
+	GROUP BY c.order_id
 )
-SELECT c_id,
-	product_name
-FROM cte_first_order
-WHERE rn = 1
+SELECT max(n_orders) AS max_n_orders
+FROM cte_order_count;
 ````
 
 **Results:**
 
-c_id|product_name|
-----|------------|
-A   |sushi       |
-B   |curry       |
-C   |ramen       |
+max_n_orders|
+------------|
+3|
 
-#### 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
+#### 7. For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+
+1. Join the customer_orders tables to the runners_order table.
+2. Use case statements to get the total sum for changes (Extras or exclusions) in delivered pizzas.
+3. Group by customer_id
 
 ````sql
-SELECT m.product_name,
-	COUNT(s.product_id) AS n_purchased
-FROM menu AS m
-	JOIN sales AS s ON m.product_id = s.product_id
-GROUP BY m.product_name
-ORDER BY n_purchased DESC
-LIMIT 1;
+SELECT c.customer_id,
+	sum(
+		CASE
+			WHEN c.exclusions IS NOT NULL
+			OR c.extras IS NOT NULL THEN 1
+			ELSE 0
+		END
+	) AS has_changes,
+	sum(
+		CASE
+			WHEN c.exclusions IS NULL
+			OR c.extras IS NULL THEN 1
+			ELSE 0
+		END
+	) AS no_changes
+FROM new_customer_orders AS c
+	JOIN new_runner_orders AS r ON c.order_id = r.order_id
+WHERE r.cancellation IS NULL
+GROUP BY c.customer_id
+ORDER BY c.customer_id;
 ````
 
 **Results:**
 
-product_name|n_purchased|
-------------|-----------|
-ramen       |          8|
+customer_id|has_changes|no_changes|
+-----------|-----------|----------|
+101|          0|         2|
+102|          0|         3|
+103|          3|         3|
+104|          2|         2|
+105|          1|         1|
 
-#### 5. Which item was the most popular for each customer?
+#### 8. How many pizzas were delivered that had both exclusions and extras?
 
-1. Create a CTE and join the sales and menu tables.
-2. Use the rank window function to rank every item purchased by the customer.
-3. Order the items by the numbers or times purchase  in descending order (highest to lowest).
-4.  Select 'everything' for every item where the rank is '1'.
+1. Join the customer_orders tables to the runners_order table.
+2. Use case statements to get total sum for changes (Extras AND exclusions) in delivered pizza.
 
 ````sql
-WITH cte_most_popular AS (
-	SELECT s.customer_id AS c_id,
-		m.product_name AS p_name,
-		RANK() OVER (
-			PARTITION BY customer_id
-			ORDER BY COUNT(m.product_id) DESC
-		) AS rnk
-	FROM sales AS s
-		JOIN menu AS m ON s.product_id = m.product_id
-	GROUP BY c_id,
-		p_name
-)
-SELECT *
-FROM cte_most_popular
-WHERE rnk = 1;
+SELECT sum(
+		CASE
+			WHEN c.exclusions IS NOT NULL
+			and c.extras IS NOT NULL THEN 1
+			ELSE 0
+		END
+	) AS n_pizzas
+FROM new_customer_orders AS c
+	JOIN new_runner_orders AS r ON c.order_id = r.order_id
+WHERE r.cancellation IS NULL;
 ````
 
 **Results:**
 
-c_id|p_name|rnk|
-----|------|---|
-A   |ramen |  1|
-B   |sushi |  1|
-B   |curry |  1|
-B   |ramen |  1|
-C   |ramen |  1|
+n_pizzas|
+--------|
+1|
 
-❗ **Note** customer_id: **B** had a tie with all three items on the menu.
+#### 9. What was the total volume of pizzas ordered for each hour of the day?
 
-#### 6. Which item was purchased first by the customer after they became a member?
-
-1. Create a CTE and join the sales and menu tables to the members table.
-2. Use the rank window function to rank every item purchased by the customer.
-3. Order the items by the numbers or times purchase in ascending order (lowest to highest).
-4. Filter the results to orders made after the join date.
-5. Select customer and product where rank = '1'.
+1. Extract the Hour from the order_time timestamp.
+2. Get the total count.
+3. Group by the hour.
 
 ````sql
-WITH cte_first_member_purchase AS (
-	SELECT m.customer_id AS p,
-		m2.product_name AS product,
-		RANK() OVER (
-			PARTITION BY m.customer_id
-			ORDER BY s.order_date
-		) AS rnk
-	FROM members AS m
-		JOIN sales AS s ON s.customer_id = m.customer_id
-		JOIN menu AS m2 ON s.product_id = m2.product_id
-	WHERE s.order_date >= m.join_date
-)
-SELECT customer,
-	product
-FROM cte_first_member_purchase
-WHERE rnk = 1;
+SELECT extract(
+		hour
+		FROM order_time::timestamp
+	) AS hour_of_day,
+	count(*) AS n_pizzas
+FROM new_customer_orders
+WHERE order_time IS NOT NULL
+GROUP BY hour_of_day
+ORDER BY hour_of_day;
 ````
 
 **Results:**
 
-customer|product|
---------|-------|
-A       |curry  |
-B       |sushi  |
+hour_of_day|n_pizzas|
+-----------|--------|
+11.0|       1|
+13.0|       3|
+18.0|       3|
+19.0|       1|
+21.0|       3|
+23.0|       3|
 
-#### 7. Which item was purchased just before the customer became a member?
+#### 10. What was the volume of orders for each day of the week?
 
-1. Create a CTE and join the sales and menu tables to the members table.
-2. Use the rank window function to rank every item purchased by the customer.
-3. Order the items by the numbers or times purchase in descending order (highest to lowest).
-4. Filter the results to orders made before the join date.
-5. Select customer and product where rank = '1'.
+1. Extract the day from the order_time timestamp.
+2. Get the total count.
+3. Group by the day of the week.
 
 ````sql
-WITH cte_last_nonmember_purchase AS (
-	SELECT m.customer_id AS customer,
-		m2.product_name AS product,
-		RANK() OVER (
-			PARTITION BY m.customer_id
-			ORDER BY s.order_date DESC
-		) AS rnk
-	FROM members AS m
-		JOIN sales AS s ON s.customer_id = m.customer_id
-		JOIN menu AS m2 ON s.product_id = m2.product_id
-	WHERE s.order_date < m.join_date
-)
-SELECT customer,
-	product
-FROM cte_last_nonmember_purchase
-WHERE rnk = 1;
+SELECT to_char(order_time, 'Day') AS day_of_week,
+	count(*) AS n_pizzas
+FROM new_customer_orders
+GROUP BY day_of_week
+ORDER BY day_of_week;
 ````
 
 **Results:**
 
-customer|product|
---------|-------|
-A       |sushi  |
-A       |curry  |
-B       |sushi  |
+day_of_week|n_pizzas|
+-----------|--------|
+Friday     |       1|
+Saturday   |       5|
+Thursday   |       3|
+Wednesday  |       5|
 
-#### 8. What is the total items and amount spent for each member before they became a member?
+###Runner and Customer Experience
 
-1. Create a CTE and join the sales and menu tables to the members table.
-2. Get the customer_id, total number of items and the total amount spent.
-3. Filter the results to orders made before the join date.
-4. Group by the customer id.
-
-````sql
-WITH cte_total_nonmember_purchase AS (
-	SELECT m.customer_id AS customer,
-		COUNT(m2.product_id) AS total_items,
-		SUM(m2.price) AS total_spent
-	FROM members AS m
-		JOIN sales AS s ON s.customer_id = m.customer_id
-		JOIN menu AS m2 ON s.product_id = m2.product_id
-	WHERE s.order_date < m.join_date
-	GROUP BY customer
-)
-SELECT *
-FROM cte_total_nonmember_purchase
-ORDER BY customer;
-````
-
-**Results:**
-
-customer|total_items|total_spent|
---------|-----------|-----------|
-A       |          2|         25|
-B       |          3|         40|
-
-#### 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
-
-1. Create a CTE and join the sales and menu tables to the members table.
-2. Use a case statement inside of the sum function to calculate total points including 2x multiplier.
-3. Filter the results to orders made before the join date.
-4. Group by the customer id.
-
-````sql
-WITH cte_total_member_points AS (
-	SELECT m.customer_id AS customer,
-		SUM(
-			CASE
-				WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
-				ELSE (m2.price * 10)
-			END
-		) AS member_points
-	FROM members AS m
-		JOIN sales AS s ON s.customer_id = m.customer_id
-		JOIN menu AS m2 ON s.product_id = m2.product_id
-	GROUP BY customer
-)
-SELECT *
-FROM cte_total_member_points
-````
-
-**Results:**
-
-customer|member_points|
---------|-------------|
-A       |          860|
-B       |          940|
-
-#### 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
-
-1. Create a CTE and join the sales and menu tables to the members table.
-2. Use a case statement inside of the sum function to calculate total points including 2x multiplier.
-3. If the order is after membship or within the 6 days after membership then use the 2x multiplier on all items. Else, only on sushi.
-4. Filter the results to orders made in Jan 2021.
-5. Group by the customer id.
-
-````sql
-WITH cte_jan_member_points AS (
-	SELECT m.customer_id AS customer,
-		SUM(
-			CASE
-				WHEN s.order_date < m.join_date THEN 
-					CASE
-						WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
-						ELSE (m2.price * 10)
-					END
-				WHEN s.order_date > (m.join_date + 6) THEN 
-					CASE
-						WHEN m2.product_name = 'sushi' THEN (m2.price * 20)
-						ELSE (m2.price * 10)
-					END
-				ELSE (m2.price * 20)
-			END
-		) AS member_points
-	FROM members AS m
-		JOIN sales AS s ON s.customer_id = m.customer_id
-		JOIN menu AS m2 ON s.product_id = m2.product_id
-	WHERE s.order_date <= '2021-01-31'
-	GROUP BY customer
-)
-SELECT *
-FROM cte_jan_member_points
-ORDER BY customer;
-````
-
-**Results:**
-
-customer|member_points|
---------|-------------|
-A       |         1370|
-B       |          820|
+#### 1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
