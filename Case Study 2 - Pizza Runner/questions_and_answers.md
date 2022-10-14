@@ -399,3 +399,668 @@ Wednesday  |       5|
 ###Runner and Customer Experience
 
 #### 1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
+
+1. Create CTE and select
+	* runner_id
+	* Actual registration date
+	* Starting week.  Calculate the starting week by 
+		* subtract the registration_date from '2021-01-01'
+		* get the remainder of subtraction above from dividing by 7 (days in week)
+		* subtract registration_date from remainder to derive start week. 
+2. Select runner_id and starting_week from CTE
+3. Group and Order by starting week.
+
+````sql
+WITH runner_signups AS (
+	SELECT runner_id,
+		registration_date,
+		registration_date - ((registration_date - '2021-01-01') % 7) AS starting_week
+	FROM runners
+)
+SELECT starting_week,
+	count(runner_id) AS n_runners
+from runner_signups
+GROUP BY starting_week
+ORDER BY starting_week;
+````
+
+**Results:**
+
+starting_week|n_runners|
+-------------|---------|
+   2021-01-01|        2|
+   2021-01-08|        1|
+   2021-01-15|        1|
+
+#### 2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
+
+````sql
+WITH runner_time AS (
+	SELECT r.runner_id,
+		r.order_id,
+		r.pickup_time,
+		c.order_time,
+		(r.pickup_time - c.order_time) AS runner_arrival_time
+	FROM new_runner_orders AS r
+		JOIN new_customer_orders AS c ON r.order_id = c.order_id
+)
+SELECT runner_id,
+	extract(
+		'minutes'
+		FROM avg(runner_arrival_time)
+	) AS avg_arrival_time
+from runner_time
+GROUP BY runner_id
+ORDER BY runner_id;
+````
+
+**Results:**
+
+runner_id|avg_arrival_time|
+---------|----------------|
+1|            15.0|
+2|            23.0|
+3|            10.0|
+
+#### 3. Is there any relationship between the number of pizzas and how long the order takes to prepare?
+
+````sql
+WITH runner_time AS (
+	SELECT r.runner_id,
+		r.order_id,
+		r.pickup_time,
+		c.order_time,
+		(r.pickup_time - c.order_time) AS runner_arrival_time
+	FROM new_runner_orders AS r
+		JOIN new_customer_orders AS c ON r.order_id = c.order_id
+)
+SELECT runner_id,
+	extract(
+		'minutes'
+		FROM avg(runner_arrival_time)
+	) AS avg_arrival_time
+from runner_time
+GROUP BY runner_id
+ORDER BY runner_id;
+````
+
+**Results:**
+
+❗  Yes.  Although the type of pizza and specialty orders (exclusions & extras) could also be influencing the preparation time.l 
+
+n_pizzas|avg_order_time|
+--------|--------------|
+1|    00:12:21.4|
+2|    00:18:22.5|
+3|      00:29:17|
+
+#### 4a. What was the average distance traveled for each customer?
+
+````sql
+SELECT c.customer_id,
+	floor(avg(r.distance)) AS avg_distance_rounded_down,
+	round(avg(r.distance), 2) AS avg_distance,
+	ceil(avg(r.distance)) AS avg_distance_rounded_up
+FROM new_runner_orders AS r
+	JOIN new_customer_orders AS c ON c.order_id = r.order_id
+GROUP BY customer_id
+ORDER BY customer_id;
+````
+
+**Results:**
+
+customer_id|avg_distance_rounded_down|avg_distance|avg_distance_rounded_up|
+-----------|-------------------------|------------|-----------------------|
+101|                       20|       20.00|                     20|
+102|                       16|       16.73|                     17|
+103|                       23|       23.40|                     24|
+104|                       10|       10.00|                     10|
+105|                       25|       25.00|                     25|
+
+#### 4b. What was the average distance travelled for each runner?
+
+````sql
+SELECT runner_id,
+	floor(avg(distance)) AS avg_distance_rounded_down,
+	round(avg(distance), 2) AS avg_distance,
+	ceil(avg(distance)) AS avg_distance_rounded_up
+FROM new_runner_orders
+GROUP BY runner_id
+ORDER BY runner_id;
+````
+
+**Results:**
+
+runner_id|avg_distance_rounded_down|avg_distance|avg_distance_rounded_up|
+---------|-------------------------|------------|-----------------------|
+1|                       15|       15.85|                     16|
+2|                       23|       23.93|                     24|
+3|                       10|       10.00|                     10|
+
+#### 5. What was the difference between the longest and shortest delivery times for all orders?
+
+````sql
+SELECT
+	max(duration) - min(duration) AS time_diff
+FROM new_runner_orders;
+````
+
+**Results:**
+
+time_diff|
+---------|
+30|
+
+#### 6. What was the difference between the longest and shortest delivery times for all orders?
+
+````sql
+WITH customer_order_count AS (
+	SELECT customer_id,
+		order_id,
+		order_time,
+		count(pizza_id) AS n_pizzas
+	FROM new_customer_orders
+	GROUP BY customer_id,
+		order_id,
+		order_time
+)
+SELECT c.customer_id,
+	r.order_id,
+	r.runner_id,
+	c.n_pizzas,
+	r.distance,
+	r.duration,
+	round(60 * r.distance / r.duration, 2) AS runner_speed
+FROM new_runner_orders AS r
+	JOIN customer_order_count AS c ON r.order_id = c.order_id
+WHERE r.pickup_time IS NOT NULL
+ORDER BY runner_speed DESC
+````
+
+**Results:**
+
+customer_id|order_id|runner_id|n_pizzas|distance|duration|runner_speed|
+-----------|--------|---------|--------|--------|--------|------------|
+103|       4|        2|       3|    23.4|      40|       35.10|
+101|       1|        1|       1|      20|      32|       37.50|
+104|       5|        3|       1|      10|      15|       40.00|
+102|       3|        1|       2|    13.4|      20|       40.20|
+101|       2|        1|       1|      20|      27|       44.44|
+105|       7|        2|       1|      25|      25|       60.00|
+104|      10|        1|       2|      10|      10|       60.00|
+102|       8|        2|       1|    23.4|      15|       93.60|
+
+
+
+❗ **Noticable Trend** ❗ As long as weather and road conditions are not a factor, customer #102 appears to be a tremendous tipper and runner #2 will violate every law in an attempt to deliver the pizza quickly. Although the slowest runner carried three pizzas, other runners carrying only 1 pizza has similar slow speeds which may have been caused by bad weather conditions or some other factor. 
+
+#### 7.  What is the successful delivery percentage for each runner?
+
+````sql
+SELECT runner_id,
+	count(pickup_time) AS delivered_pizzas,
+	count(order_id) AS total_orders,
+	(
+		round(100 * count(pickup_time) / count(order_id))
+	) AS delivered_percentage
+FROM new_runner_orders
+GROUP BY runner_id
+ORDER BY runner_id;
+````
+
+**Results:**
+
+runner_id|delivered_pizzas|total_orders|delivered_percentage|
+---------|----------------|------------|--------------------|
+1|               4|           4|               100.0|
+2|               3|           4|                75.0|
+3|               1|           2|                50.0|
+
+###Ingredient Optimization
+
+We will create a temp table with the unnested array of pizza toppings.
+
+````sql
+DROP TABLE IF EXISTS recipe_toppings;
+CREATE TEMP TABLE recipe_toppings AS (
+	SELECT
+		pn.pizza_id,
+		pn.pizza_name,
+		UNNEST(string_to_array(pr.toppings, ','))::numeric AS each_topping
+	FROM pizza_names AS pn
+	JOIN pizza_recipes AS pr
+	ON pn.pizza_id = pr.pizza_id
+);
+````
+
+#### 1. What are the standard ingredients for each pizza?
+
+````sql
+SELECT rt.pizza_name,
+	pt.topping_name
+FROM recipe_toppings AS rt
+	JOIN pizza_toppings AS pt ON rt.each_topping = pt.topping_id
+ORDER BY rt.pizza_name;
+````
+
+**Results:**
+
+pizza_name|topping_name|
+----------|------------|
+Meatlovers|BBQ Sauce   |
+Meatlovers|Pepperoni   |
+Meatlovers|Cheese      |
+Meatlovers|Salami      |
+Meatlovers|Chicken     |
+Meatlovers|Bacon       |
+Meatlovers|Mushrooms   |
+Meatlovers|Beef        |
+Vegetarian|Tomato Sauce|
+Vegetarian|Cheese      |
+Vegetarian|Mushrooms   |
+Vegetarian|Onions      |
+Vegetarian|Peppers     |
+Vegetarian|Tomatoes    |
+
+#### 2. What was the most commonly added extra?
+
+````sql
+WITH most_common_extra AS (
+	SELECT extras,
+		RANK() OVER (
+			ORDER BY count(extras) desc
+		) AS rnk_extras
+	from (
+			SELECT trim(UNNEST(string_to_array(extras, ',')))::numeric AS extras
+			FROM new_customer_orders
+			GROUP BY extras
+		) AS tmp
+	GROUP BY extras
+)
+SELECT topping_name
+FROM pizza_toppings
+WHERE topping_id = (
+		SELECT extras
+		FROM most_common_extra
+		WHERE rnk_extras = 1
+	);
+````
+
+**Results:**
+
+topping_name|
+------------|
+Bacon       |
+
+#### 3. What was the most common exclusion?
+
+````sql
+WITH most_common_exclusion AS (
+	SELECT exclusions,
+		RANK() OVER (
+			ORDER BY count(exclusions) desc
+		) AS rnk_exclusions
+	from (
+			SELECT trim(UNNEST(string_to_array(exclusions, ',')))::numeric AS exclusions
+			FROM new_customer_orders
+			GROUP BY exclusions
+		) AS tmp
+	GROUP BY exclusions
+)
+SELECT topping_name
+FROM pizza_toppings
+WHERE topping_id in (
+		SELECT exclusions
+		FROM most_common_exclusion
+		WHERE rnk_exclusions = 1;
+````
+
+**Results:**
+
+topping_name|
+------------|
+BBQ Sauce   |
+Cheese      |
+Mushrooms   |
+
+#### 4. Generate an order item for each record in the customers_orders table in the format of one of the following:
+	*Meat Lovers
+	*Meat Lovers - Exclude Beef
+	*Meat Lovers - Extra Bacon
+	*Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
+
+````sql
+-- Create a temp table and give customer orders a unique id using row_number
+DROP TABLE IF EXISTS id_customer_orders;
+CREATE TEMP TABLE id_customer_orders AS (
+	SELECT
+		row_number() OVER (ORDER BY order_id) AS row_id,
+		order_id,
+		customer_id,
+		pizza_id,
+		exclusions,
+		extras,
+		order_time
+FROM
+	new_customer_orders
+);
+-- Create a temp table and unnest the exclusions array.
+DROP TABLE IF EXISTS get_exclusions;
+CREATE TEMP TABLE get_exclusions AS (
+	SELECT
+		row_id,
+		order_id,
+		trim(UNNEST(string_to_array(exclusions, ',')))::NUMERIC AS single_exclusions
+	FROM id_customer_orders
+	GROUP BY row_id, order_id, exclusions
+);
+-- Create a temp table and unnest the extras array.
+DROP TABLE IF EXISTS get_extras;
+CREATE TEMP TABLE get_extras AS (
+	SELECT
+		row_id,
+		order_id,
+		trim(UNNEST(string_to_array(extras, ',')))::numeric AS single_extras
+	FROM id_customer_orders
+	GROUP BY row_id, order_id, extras
+);
+
+SELECT
+	-- Use a case statement to concatnate exclusions and extras for each order
+	case
+		WHEN all_exclusions IS NOT NULL AND all_extras IS NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions)
+		WHEN all_exclusions IS NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Extra: ', all_extras)
+		WHEN all_exclusions IS NOT NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions, ' - ', 'Extra: ', all_extras)
+		ELSE pizza_name
+	END AS pizza_type
+from
+	(
+	SELECT
+		c.row_id,
+		c.order_id,
+		pn.pizza_name,
+		CASE
+			WHEN c.exclusions IS NULL AND c.extras IS NULL THEN NULL
+			ELSE  -- Use string_agg to flatten list of exclusions using a comma delimeter
+				(SELECT
+					string_agg((SELECT topping_name FROM pizza_toppings WHERE topping_id = get_exc.single_exclusions), ', ')
+				FROM
+					get_exclusions AS get_exc
+				WHERE order_id =c.order_id)
+		END AS all_exclusions,
+		CASE
+			WHEN c.exclusions IS NULL AND c.extras IS NULL THEN NULL
+			ELSE -- Use string_agg to flatten list of extras using a comma delimeter
+				(SELECT
+					string_agg((SELECT topping_name FROM pizza_toppings WHERE topping_id = get_ext.single_extras), ', ')
+				FROM
+					get_extras AS get_ext
+				WHERE order_id =c.order_id)
+		END AS all_extras
+	FROM pizza_names AS pn
+	JOIN id_customer_orders AS c
+	ON c.pizza_id = pn.pizza_id
+	LEFT JOIN get_exclusions AS get_exc
+	ON get_exc.order_id = c.order_id AND c.exclusions IS NOT NULL
+	LEFT JOIN get_extras AS get_ext
+	ON get_ext.order_id = c.order_id AND c.extras IS NOT NULL
+	GROUP BY 
+		c.row_id,
+		c.order_id,
+		pn.pizza_name,
+		c.exclusions,
+		c.extras
+	ORDER BY c.row_id) AS tmp
+````
+
+**Results:**
+
+pizza_type                                                       |
+-----------------------------------------------------------------|
+Meatlovers                                                       |
+Meatlovers                                                       |
+Meatlovers                                                       |
+Vegetarian                                                       |
+Meatlovers - Exclude: Cheese                                     |
+Meatlovers - Exclude: Cheese                                     |
+Vegetarian - Exclude: Cheese                                     |
+Meatlovers - Extra: Bacon                                        |
+Vegetarian                                                       |
+Vegetarian - Extra: Bacon                                        |
+Meatlovers                                                       |
+Meatlovers - Exclude: Cheese - Extra: Bacon, Chicken             |
+Meatlovers                                                       |
+Meatlovers - Exclude: BBQ Sauce, Mushrooms - Extra: Bacon, Cheese|
+
+#### 5. Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients 
+
+````sql
+DROP TABLE IF EXISTS get_toppings;
+CREATE TEMP TABLE get_toppings AS (
+	SELECT row_id,
+		order_id,
+		trim(UNNEST(string_to_array(toppings, ',')))::numeric AS single_toppings
+	FROM id_customer_orders AS c
+		JOIN pizza_recipes AS pr ON c.pizza_id = pr.pizza_id
+	GROUP BY row_id,
+		order_id,
+		toppings
+);
+DROP TABLE IF EXISTS ingredients;
+CREATE TEMP TABLE ingredients AS (
+	SELECT row_id,
+		order_id,
+		pizza_name,
+		concat(all_toppings, ',', all_extras) AS all_ingredients
+	from (
+			SELECT c.row_id,
+				c.order_id,
+				pn.pizza_name,
+				(
+					SELECT trim(
+							string_agg(
+								(
+									SELECT topping_name
+									FROM pizza_toppings
+									WHERE topping_id = get_top.single_toppings
+								),
+								','
+							)
+						)
+					FROM get_toppings AS get_top
+					WHERE get_top.row_id = c.row_id
+						AND get_top.single_toppings NOT IN (
+							(
+								SELECT single_exclusions
+								FROM get_exclusions
+								WHERE c.row_id = row_id
+							)
+						)
+				) AS all_toppings,
+				(
+					SELECT trim(
+							string_agg(
+								(
+									SELECT topping_name
+									FROM pizza_toppings
+									WHERE topping_id = get_extra.single_extras
+								),
+								','
+							)
+						)
+					FROM get_extras AS get_extra
+					WHERE get_extra.row_id = c.row_id
+				) AS all_extras
+			FROM pizza_names AS pn
+				JOIN id_customer_orders AS c ON c.pizza_id = pn.pizza_id
+			ORDER BY c.row_id
+		) AS tmp
+);
+SELECT row_id,
+	pizza_name,
+	string_agg(new_ing, ',') AS toppings
+from (
+		SELECT row_id,
+			pizza_name,
+			CASE
+				WHEN count(each_ing) > 1 THEN concat('2x', each_ing)
+				when each_ing != '' THEN each_ing
+			END AS new_ing
+		from (
+				SELECT row_id,
+					pizza_name,
+					UNNEST(string_to_array(all_ingredients, ',')) AS each_ing
+				FROM ingredients
+			) AS tmp
+		GROUP BY row_id,
+			pizza_name,
+			each_ing
+	) AS tmp2
+WHERE new_ing IS NOT null
+GROUP BY row_id,
+	pizza_name
+````
+
+**Results:**
+
+row_id|pizza_name|toppings                                                        |
+------|----------|----------------------------------------------------------------|
+1|Meatlovers|Bacon,BBQ Sauce,Beef,Cheese,Chicken,Mushrooms,Pepperoni,Salami  |
+2|Meatlovers|Bacon,BBQ Sauce,Beef,Cheese,Chicken,Mushrooms,Pepperoni,Salami  |
+3|Meatlovers|Bacon,BBQ Sauce,Beef,Cheese,Chicken,Mushrooms,Pepperoni,Salami  |
+4|Vegetarian|Cheese,Mushrooms,Onions,Peppers,Tomato Sauce,Tomatoes           |
+5|Meatlovers|Bacon,BBQ Sauce,Beef,Chicken,Mushrooms,Pepperoni,Salami         |
+6|Meatlovers|Bacon,BBQ Sauce,Beef,Chicken,Mushrooms,Pepperoni,Salami         |
+7|Vegetarian|Mushrooms,Onions,Peppers,Tomato Sauce,Tomatoes                  |
+8|Meatlovers|2xBacon,BBQ Sauce,Beef,Cheese,Chicken,Mushrooms,Pepperoni,Salami|
+9|Vegetarian|Cheese,Mushrooms,Onions,Peppers,Tomato Sauce,Tomatoes           |
+10|Vegetarian|Bacon,Cheese,Mushrooms,Onions,Peppers,Tomato Sauce,Tomatoes     |
+11|Meatlovers|Bacon,BBQ Sauce,Beef,Cheese,Chicken,Mushrooms,Pepperoni,Salami  |
+12|Meatlovers|2xBacon,BBQ Sauce,Beef,2xChicken,Mushrooms,Pepperoni,Salami     |
+13|Meatlovers|Bacon,BBQ Sauce,Beef,Cheese,Chicken,Mushrooms,Pepperoni,Salami  |
+14|Meatlovers|2xBacon,Beef,2xCheese,Chicken,Pepperoni,Salami                  |
+
+#### 6. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
+
+````sql
+SELECT each_ing,
+	count(each_ing) AS n_ingredients
+from (
+		SELECT row_id,
+			order_id,
+			pizza_name,
+			UNNEST(string_to_array(all_ingredients, ',')) AS each_ing
+		FROM ingredients
+	) AS tmp
+	JOIN new_runner_orders AS r ON r.order_id = tmp.order_id
+WHERE each_ing <> ''
+	AND r.cancellation IS NULL
+GROUP BY each_ing
+ORDER BY n_ingredients DESC;
+````
+
+**Results:**
+
+each_ing    |n_ingredients|
+------------|-------------|
+Bacon       |           12|
+Mushrooms   |           11|
+Cheese      |           10|
+Chicken     |            9|
+Salami      |            9|
+Pepperoni   |            9|
+Beef        |            9|
+BBQ Sauce   |            8|
+Tomato Sauce|            3|
+Tomatoes    |            3|
+Peppers     |            3|
+Onions      |            3|
+
+###Pricing & Ratings
+
+#### 1. If a Meat Lovers pizza costs $12 and Vegetarian costs $10 and there were no charges for changes - how much money has Pizza Runner made so far if there are no delivery fees? 
+
+````sql
+DROP TABLE IF EXISTS pizza_income;
+CREATE TEMP TABLE pizza_income AS (
+	SELECT sum(total_meatlovers) + sum(total_veggie) AS total_income
+	from (
+			SELECT c.order_id,
+				c.pizza_id,
+				sum(
+					CASE
+						WHEN pizza_id = 1 THEN 12
+						ELSE 0
+					END
+				) AS total_meatlovers,
+				sum(
+					CASE
+						WHEN pizza_id = 2 THEN 10
+						ELSE 0
+					END
+				) AS total_veggie
+			FROM new_customer_orders AS c
+				JOIN new_runner_orders AS r ON r.order_id = c.order_id
+			WHERE r.cancellation IS NULL
+			GROUP BY c.order_id,
+				c.pizza_id,
+				c.extras
+		) AS tmp
+);
+SELECT *
+FROM pizza_income;
+````
+
+**Results:**
+
+total_income|
+------------|
+138|
+
+#### 2. What if there was an additional $1 charge for any pizza extras? 
+
+````sql
+DROP TABLE IF EXISTS get_extras_cost;
+CREATE TEMP TABLE get_extras_cost AS (
+	SELECT order_id,
+		count(each_extra) AS total_extras
+	from (
+			SELECT order_id,
+				UNNEST(string_to_array(extras, ',')) AS each_extra
+			FROM new_customer_orders
+		) AS tmp
+	GROUP BY order_id
+);
+SELECT sum(total_meatlovers) + sum(total_veggie) + sum(total_extras) AS total_income
+from (
+		SELECT c.order_id,
+			c.pizza_id,
+			sum(
+				CASE
+					WHEN pizza_id = 1 THEN 12
+					ELSE 0
+				END
+			) AS total_meatlovers,
+			sum(
+				CASE
+					WHEN pizza_id = 2 THEN 10
+					ELSE 0
+				END
+			) AS total_veggie,
+			gec.total_extras
+		FROM new_customer_orders AS c
+			JOIN new_runner_orders AS r ON r.order_id = c.order_id
+			LEFT JOIN get_extras_cost AS gec ON gec.order_id = c.order_id
+		WHERE r.cancellation IS NULL
+		GROUP BY c.order_id,
+			c.pizza_id,
+			c.extras,
+			gec.total_extras
+	) AS tmp
+````
+
+**Results:**
+
+total_income|
+------------|
+144|

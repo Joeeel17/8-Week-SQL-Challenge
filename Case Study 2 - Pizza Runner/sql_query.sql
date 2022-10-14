@@ -391,16 +391,19 @@ Wednesday  |       5|
 */
        
 -- 1. How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01) 
- 
+
+WITH runner_signups AS (
+	SELECT
+		runner_id,
+		registration_date,
+		registration_date - ((registration_date - '2021-01-01') % 7) AS starting_week
+	FROM runners
+)
 SELECT
 	starting_week,
 	count(runner_id) AS n_runners
 from
-	(SELECT
-		runner_id,
-		registration_date,
-		registration_date - ((registration_date - '2021-01-01') % 7) AS starting_week
-	FROM runners) AS signups
+	runner_signups
 GROUP BY starting_week
 ORDER BY starting_week;
 
@@ -414,11 +417,8 @@ starting_week|n_runners|
 
 -- 2. What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
 
-SELECT
-	runner_id,
-	extract('minutes' FROM avg(runner_arrival_time)) AS avg_arrival_time
-from
-	(SELECT
+WITH runner_time AS (
+	SELECT
 		r.runner_id,
 		r.order_id,
 		r.pickup_time,
@@ -426,7 +426,13 @@ from
 		(r.pickup_time - c.order_time) AS runner_arrival_time
 	FROM new_runner_orders AS r
 	JOIN new_customer_orders AS c
-	ON r.order_id = c.order_id) AS runner_time
+	ON r.order_id = c.order_id
+)
+SELECT
+	runner_id,
+	extract('minutes' FROM avg(runner_arrival_time)) AS avg_arrival_time
+from
+	runner_time
 GROUP BY runner_id
 ORDER BY runner_id;
 	
@@ -462,7 +468,6 @@ preperation_time AS (
 	ON r.order_id = n.order_id
 	WHERE r.pickup_time IS NOT null
 )
-
 SELECT
 	n_pizzas,
 	avg(runner_arrival_time) AS avg_order_time
@@ -478,7 +483,7 @@ n_pizzas|avg_order_time|
        2|    00:18:22.5|
        3|      00:29:17|
        
--- 4a. What was the average distance travelled for each customer?
+-- 4a. What was the average distance traveled for each customer?
 
 SELECT
 	c.customer_id,
@@ -546,7 +551,6 @@ WITH customer_order_count AS (
 		order_id,
 		order_time		
 )
-
 SELECT
 	c.customer_id,
 	r.order_id,
@@ -582,7 +586,7 @@ customer_id|order_id|runner_id|n_pizzas|distance|duration|runner_speed|
 -- As long as weather and road conditions are not a factor, customer #102 appears to be a tremendous tipper and
 -- runner #2 will violate every law in an attempt to deliver the pizza quickly.
 -- Although the slowest runner carried three pizzas, other runners carrying only 1 pizza has similar slow
--- speeds which may have been cause by bad weather conditions or some other factor.     
+-- speeds which may have been caused by bad weather conditions or some other factor.     
        
        
 -- 7. -- What is the successful delivery percentage for each runner?
@@ -594,7 +598,7 @@ SELECT
 	(round(100 * count(pickup_time) / count(order_id))) AS delivered_percentage
 FROM new_runner_orders
 GROUP BY runner_id
-ORDER BY runner_id
+ORDER BY runner_id;
 
 -- Result:
 
@@ -607,7 +611,7 @@ runner_id|delivered_pizzas|total_orders|delivered_percentage|
 /* 
  * Pizza Runner
  * Case Study #2 Questions
- * Ingredient Optimisation
+ * Ingredient Optimization
  *  
 */
 
@@ -634,7 +638,7 @@ JOIN pizza_toppings AS pt
 ON rt.each_topping = pt.topping_id
 ORDER BY rt.pizza_name;
 
--- Result
+-- Result:
 
 pizza_name|topping_name|
 ----------+------------+
@@ -672,7 +676,7 @@ SELECT
 FROM pizza_toppings
 WHERE topping_id = (SELECT extras FROM most_common_extra WHERE rnk_extras = 1);
 
--- Result
+-- Result:
 
 topping_name|
 ------------+
