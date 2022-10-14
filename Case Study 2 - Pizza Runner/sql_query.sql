@@ -670,7 +670,6 @@ WITH most_common_extra AS (
 		GROUP BY extras) AS tmp
 	GROUP BY extras
 )
-
 SELECT
 	topping_name
 FROM pizza_toppings
@@ -929,7 +928,7 @@ WHERE
 AND 
 	r.cancellation IS NULL
 GROUP BY each_ing
-ORDER BY n_ingredients desc
+ORDER BY n_ingredients DESC;
     
 -- Results
 
@@ -1070,6 +1069,8 @@ VALUES
 	('3', '102', '5', '3', '5'),
 	('4', '102', '8', '2', '2'),
 	('5', '104', '10', '1', '5');
+
+SELECT * FROM runner_rating_system;
 
 -- 4. Using your newly generated table - can you join all of the information together to form a table which has the following 
 -- information for successful deliveries?
