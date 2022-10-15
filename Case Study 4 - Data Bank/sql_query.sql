@@ -18,7 +18,7 @@ FROM
 	FROM
 		customer_nodes
 	GROUP BY
-		region_id) AS tmp
+		region_id) AS tmp;
 
 -- Results:
 
@@ -96,7 +96,7 @@ FROM
 		customer_id,
 		start_date) AS tmp
 WHERE
-	prev_node != node_id
+	prev_node != node_id;
 
 -- Results:
 	
@@ -144,7 +144,7 @@ SELECT
 	CEIL("80th_perc") AS "80th_percentile",
 	CEIL("95th_perc") AS "95th_percentile"
 FROM
-	perc_reallocation
+	perc_reallocation;
         
 -- Results:
 
@@ -168,7 +168,7 @@ SELECT
 FROM
 	customer_transactions
 GROUP BY 
-	txn_type
+	txn_type;
 
 -- OR
         
@@ -193,7 +193,7 @@ SELECT
 FROM
 	customer_transactions
 GROUP BY
-	transaction_type
+	transaction_type;
 	
 -- Results:
 
@@ -219,7 +219,7 @@ FROM
 	WHERE
 		txn_type = 'deposit'
 	GROUP BY
-		customer_id) AS tmp
+		customer_id) AS tmp;
 
 -- Results:
 		

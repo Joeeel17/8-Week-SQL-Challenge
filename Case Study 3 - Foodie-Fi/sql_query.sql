@@ -260,7 +260,7 @@ n_customers|n_churn|churn_perc|
 
 DROP TABLE IF EXISTS trial_only;
 CREATE TEMP table trial_only AS (
-	WITH set_row_number (
+	WITH set_row_number as (
 		SELECT
 			DISTINCT customer_id,
 			plan_name,
@@ -517,7 +517,7 @@ from
 WHERE 
 	plan_name = 'pro monthly'
 AND 
-	downgrade = 'basic monthly'
+	downgrade = 'basic monthly';
 	
 -- Results:
 	
@@ -538,7 +538,7 @@ subscriptions table with the following requirements:
 	B. upgrades from basic to monthly or pro plans are reduced by the current paid amount in that month and start immediately
 	C. upgrades from pro monthly to pro annual are paid at the end of the current billing period and also starts at the end of the month period
 	D. once a customer churns they will no longer make payments
-	E. Jaime M. Shaker jaime.m.shaker@gmail.com or jaime@shaker.codes 
+	E. Jaime M. Shaker jaime.m.shaker@gmail.com 
 */
 
 DROP TABLE IF EXISTS customer_payments;
@@ -610,7 +610,7 @@ from
 -- We will display a sample of the data to show that is works
 WHERE
 	customer_id IN (1, 2, 13, 15, 16, 18, 19)
-ORDER BY customer_id
+ORDER BY customer_id;
 
 -- Results:
 
