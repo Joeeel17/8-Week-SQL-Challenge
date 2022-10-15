@@ -25,7 +25,7 @@ but their plan will continue until the end of the billing period.
 ````sql
 SELECT *
 FROM plans;
-````@@ -0,0 +1,674 @@
+````
 # Foodie-Fi
 ## Questions and Answers
 ### by jaime.m.shaker@gmail.com

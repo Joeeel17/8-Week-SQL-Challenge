@@ -225,7 +225,7 @@ OCEANIA      |         2018|           3|  175777460|
 SOUTH AMERICA|         2018|           3|   16302144|
 USA          |         2018|           3|   52734998|
 
--- 5. What is the total count of transactions for each platform
+-- 5. What is the total count of transactions for each platform?
         
 SELECT 
 	platform,
@@ -272,7 +272,7 @@ from
 	ORDER BY calendar_year, month_number, platform) AS tmp      
 GROUP BY 
 	calendar_year,
-	month_number
+	month_number;
 	
 -- Results:
 	
@@ -315,7 +315,7 @@ GROUP BY
 	calendar_year
 ORDER BY 
 	calendar_year, 
-	demographics
+	demographics;
 	
 -- Results:
 
@@ -354,7 +354,7 @@ from
 	GROUP BY 
 		demographics,
 		age_band) AS tmp
-WHERE rnk = 1
+WHERE rnk = 1;
 
 -- Results:
 -- ** NOTE ** I did not include 'unknown' because they ask for a demographic and age_band
@@ -381,7 +381,7 @@ GROUP BY
 	platform
 ORDER BY 
 	calendar_year,
-	platform
+	platform;
 
 -- Results:
 	
@@ -414,7 +414,7 @@ SELECT
 FROM
 	clean_weekly_sales
 WHERE 
-	week_day = '2020-06-15'
+	week_day = '2020-06-15';
 	
 -- Results:
 	
@@ -450,7 +450,7 @@ HAVING (
 	END
 ) IS NOT NULL
 ORDER BY 
-	time_period desc
+	time_period DESC;
         
 -- Results:
 	
