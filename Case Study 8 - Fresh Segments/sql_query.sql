@@ -6,7 +6,7 @@
 
 -- A.  Data Exploration and Cleansing
 
--- 1.  Update the fresh_segments.interest_metrics table by modifying the month_year column to be a date data type with the start of the month
+-- 1.  Update the fresh_segments.interest_metrics table by modifying the month_year column to be a date data type with the start of the month?
 
 SELECT * FROM fresh_segments.interest_metrics ORDER BY ranking LIMIT 5;
 
@@ -50,7 +50,7 @@ FROM
 GROUP BY
 	month_year
 ORDER BY 
-	month_year ASC NULLS first
+	month_year ASC NULLS FIRST;
 	
 -- Results:
 	
@@ -156,7 +156,7 @@ select
 			fresh_segments.interest_metrics
 		WHERE
 			fresh_segments.interest_metrics.interest_id::numeric = fresh_segments.interest_map.id	
-	)) AS not_in_metric
+	)) AS not_in_metric;
 
 -- Results:
 	
@@ -197,7 +197,7 @@ SELECT
 FROM
 	check_count
 GROUP BY
-	n_id
+	n_id;
 	
 -- Results: (This verifies that the id's are unique)
 	
@@ -213,7 +213,7 @@ n_id|count|
  * All values of interest_id from interest_metrics are also in interest_map.
  * All id's in interest_map are unique.
  * 
- * Am inner join or left join would work in this scenario.
+ * An inner join or left join would work in this scenario.
  * 
  */	
 
@@ -277,7 +277,7 @@ n_records|
       188|
 
 
--- 7.a Do you think these values are valid and why?
+-- 7a. Do you think these values are valid and why?
 
 /*
  * These records are valid because when we adjusted the month_date column, we rolled it back to the start
@@ -307,7 +307,7 @@ WITH persistent_interests AS (
 SELECT
 	count(*) AS n_interests
 FROM
-	persistent_interests
+	persistent_interests;
 	
 -- Results:
 	
@@ -357,7 +357,7 @@ FROM
 GROUP BY
 	total_months
 ORDER BY
-	total_months desc
+	total_months DESC;
 
 -- Results:
 	
@@ -452,7 +452,7 @@ WHERE
 			cte_total_months
 		WHERE
 			cte_total_months.interest_id = fresh_segments.interest_metrics.interest_id
-	)
+	);
 
 -- Results:
 	
@@ -494,7 +494,7 @@ WHERE
 GROUP BY 
 	month_year
 ORDER BY
-	month_year
+	month_year;
 	
 -- Results:
 	
@@ -748,7 +748,7 @@ WHERE
 OR
 	max_rank = 1
 ORDER BY
-	interest_id, percentile_ranking
+	interest_id, percentile_ranking;
 	
 -- Results:
 	
@@ -796,7 +796,7 @@ month_year|interest_id|interest_name                    |composition|rnk|
 
 -- Average composition can be calculated by dividing the composition column by the index_value column rounded to 2 decimal places.
 
--- 1. What is the top 10 interests by the average composition for each month?
+-- 1. What are the top 10 interests by the average composition for each month?
 
 WITH get_top_avg_composition AS (
 	SELECT
@@ -991,7 +991,7 @@ SELECT
 FROM 
 	get_lag_avg
 WHERE
-	month_year BETWEEN '2018-09-01' AND '2019-08-01'
+	month_year BETWEEN '2018-09-01' AND '2019-08-01';
 
 -- Results:
 	
