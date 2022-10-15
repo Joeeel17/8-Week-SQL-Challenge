@@ -187,7 +187,7 @@ SELECT
 FROM subs_plans
 WHERE plan_id = 0
 GROUP BY trial_month
-ORDER BY to_date(to_char(start_date, 'Month'), 'Month')
+ORDER BY to_date(to_char(start_date, 'Month'), 'Month');
          
 -- Results:
 
@@ -206,7 +206,7 @@ October    |      79|
 November   |      75|
 December   |      84|
 
--- 3. What plan start_date values occur after the year 2020 for our dataset? Show the breakdown by count of events for each plan_name
+-- 3. What plan start_date values occur after the year 2020 for our dataset? Show the breakdown by count of events for each plan_name?
          
 SELECT
 	count(plan_name) AS n_plans,
@@ -260,6 +260,23 @@ n_customers|n_churn|churn_perc|
 
 DROP TABLE IF EXISTS trial_only;
 CREATE TEMP table trial_only AS (
+	WITH set_row_number (
+		SELECT
+			DISTINCT customer_id,
+			plan_name,
+			plan_id,
+			row_number() OVER (PARTITION BY customer_id ORDER BY plan_id) AS rn
+		FROM subs_plans
+		ORDER BY customer_id, plan_id
+	),
+	get_row_number AS (
+		SELECT
+			rn,
+			plan_name
+		from
+			set_row_number
+		WHERE rn < 3
+	)
 	SELECT
 		sum(
 			CASE
@@ -268,18 +285,7 @@ CREATE TEMP table trial_only AS (
 			end
 		) AS trial_users_only
 	from
-		(SELECT
-			rn,
-			plan_name
-		from
-			(SELECT
-				DISTINCT customer_id,
-				plan_name,
-				plan_id,
-				row_number() OVER (PARTITION BY customer_id ORDER BY plan_id) AS rn
-			FROM subs_plans
-			ORDER BY customer_id, plan_id) AS a
-		WHERE rn < 3) AS b
+		get_row_number
 );
        
 SELECT
