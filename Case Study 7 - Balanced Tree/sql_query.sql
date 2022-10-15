@@ -145,7 +145,7 @@ Teal Button Up Shirt - Mens     |             36460|             4397.60|
 SELECT
 	count(DISTINCT txn_id) AS unique_transactions
 FROM
-	balanced_tree.sales
+	balanced_tree.sales;
 	
 -- Results:
 	
@@ -225,7 +225,7 @@ SELECT
 	round(100 * (SELECT count(DISTINCT txn_id) FROM balanced_tree.sales WHERE member = 't')::numeric / count(DISTINCT txn_id), 2) AS member_percentage,
 	round(100 * (SELECT count(DISTINCT txn_id) FROM balanced_tree.sales WHERE member = 'f')::numeric / count(DISTINCT txn_id), 2) AS non_member_percentage
 FROM
-	balanced_tree.sales
+	balanced_tree.sales;
 	
 member_percentage|non_member_percentage|
 -----------------+---------------------+
@@ -240,7 +240,7 @@ SELECT
 FROM
 	balanced_tree.sales
 GROUP BY
-	member
+	MEMBER;
 
 -- Results:
 	
@@ -268,7 +268,7 @@ from
 		txn_id,
 		member) AS tmp
 GROUP BY
-	member
+	MEMBER;
 	
 -- Results:
 	
@@ -317,7 +317,7 @@ JOIN
 	balanced_tree.sales AS s ON s.prod_id = pd.product_id
 GROUP BY
 	pd.segment_id,
-	pd.segment_name
+	pd.segment_name;
 	
 -- Results:
 	
@@ -355,7 +355,7 @@ SELECT
 FROM 
 	top_ranking
 WHERE
-	rnk = 1
+	rnk = 1;
 	
 -- Results:
 	
@@ -381,7 +381,7 @@ JOIN
 	balanced_tree.sales AS s ON s.prod_id = pd.product_id
 GROUP BY
 	pd.category_id,
-	pd.category_name
+	pd.category_name;
 
 -- Results:
 	
@@ -417,7 +417,7 @@ SELECT
 FROM 
 	top_ranking
 WHERE
-	rnk = 1
+	rnk = 1;
           
 -- Results:
 	
@@ -452,7 +452,7 @@ FROM
 		pd.segment_id,
 		pd.segment_name
 	ORDER BY
-		segment_id) AS tmp
+		segment_id) AS tmp;
 
 -- Results:
 		
@@ -497,7 +497,7 @@ FROM
 		pd.segment_id,
 		pd.segment_name
 	ORDER BY
-		segment_id) AS tmp
+		segment_id) AS tmp;
 
 -- Results:
 		
@@ -528,7 +528,7 @@ FROM
 		pd.category_id,
 		pd.category_name
 	ORDER BY
-		category_id) AS tmp        
+		category_id) AS tmp;       
          
 -- Results:
 
@@ -562,7 +562,7 @@ GROUP BY
 	n_items_sold,
 	product_penetration
 ORDER BY
-	product_penetration desc
+	product_penetration DESC;
          
 -- Results:
 
@@ -644,7 +644,7 @@ FROM
       p2.product_name
   ) AS tmp
 WHERE
-  RANK = 1 -- Filter only the highest ranking item.     
+  RANK = 1; -- Filter only the highest ranking item.     
 	
 -- Results:
 
@@ -690,7 +690,7 @@ SELECT
 FROM 
 	balanced_tree.product_hierarchy AS ph
 JOIN
-	balanced_tree.product_prices AS pp ON ph.id = pp.id
+	balanced_tree.product_prices AS pp ON ph.id = pp.id;
 	
 -- Results:
 
