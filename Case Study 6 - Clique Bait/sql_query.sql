@@ -5,6 +5,11 @@
 */
 
 /*
+    1. Enterprise Relationship Diagram
+*/
+	Using the following DDL schema details to create an ERD for all the Clique Bait datasets.
+
+/*
 	2. Digital Analysis
 */
 
@@ -22,7 +27,7 @@ n_users|
     500|
     
     
--- How many cookies does each user have on average?
+-- 2. How many cookies does each user have on average?
 
 SELECT
 	round(avg(n_cookies), 2) AS avg_cookies
@@ -93,7 +98,7 @@ GROUP BY
 	e.event_type,
 	ei.event_name
 ORDER BY 
-	e.event_type
+	e.event_type;
 	
 -- Results:
 	
@@ -117,7 +122,7 @@ SELECT
 				end)::numeric 
 			/ count(DISTINCT visit_id), 2) AS purchase_percentage
 FROM 
-	clique_bait.events
+	clique_bait.events;
 	
 -- Results:
 
@@ -158,7 +163,7 @@ SELECT
 	-- Subtract percentage that did visit and purchase from 100%
 	round(100 * (1 - sum(purchased)::numeric / sum(checked_out)), 2) AS visit_percentage
 FROM
-	get_counts
+	get_counts;
 
 -- Results:
 
@@ -185,7 +190,7 @@ GROUP BY
 ORDER BY
 	n_page DESC
 LIMIT 
-	3
+	3;
 	
 -- Results:
 
@@ -195,7 +200,7 @@ page_id|page_name   |n_page|
      12|Checkout    |  2103|
       1|Home Page   |  1782|
       
--- 8. What is the number of views and cart adds for each product category?
+--  8.  Which age_band and demographic values contribute the most to Retail sales?
       
 SELECT
 	ph.product_category,
@@ -222,7 +227,7 @@ WHERE
 GROUP BY
 	ph.product_category
 ORDER BY 
-	page_views DESC
+	page_views DESC;
 	
 -- Results:
 	
@@ -270,7 +275,7 @@ GROUP BY
 	ph.page_name
 ORDER BY
 	top_3_purchased DESC
-LIMIT 3
+LIMIT 3;
 	
 -- Results:
 
@@ -482,7 +487,7 @@ SELECT
 FROM
 	rankings
 WHERE 
-	most_purchased = 1
+	most_purchased = 1;
 	
 -- Results:
 
@@ -504,7 +509,7 @@ from
 		product_info
 	ORDER BY
 		abandoned_in_cart DESC
-	LIMIT 1) AS tmp
+	LIMIT 1) AS tmp;
 	
 -- Results:
 
@@ -524,7 +529,7 @@ FROM
 	product_info
 ORDER BY 
 	abandoned_ratio DESC
-LIMIT 1
+LIMIT 1;
 
 -- Results:
 
@@ -541,7 +546,7 @@ FROM
 	product_info
 ORDER BY
 	purchased_views_ratio DESC
-LIMIT 1
+LIMIT 1;
 
 -- Results:
 
@@ -554,7 +559,7 @@ Lobster  |                48.74|
 SELECT
 	round(avg(100 * n_added_to_cart::NUMERIC / n_page_views), 2) AS views_added_ratio
 FROM
-	product_info
+	product_info;
 	
 -- Results:
 
@@ -567,7 +572,7 @@ views_added_ratio|
 SELECT
 	round(avg(100 * purchased_from_cart::NUMERIC / n_added_to_cart), 2) AS added_purchased_ratio
 FROM
-	product_info            
+	product_info;            
             
 -- Results:
 
