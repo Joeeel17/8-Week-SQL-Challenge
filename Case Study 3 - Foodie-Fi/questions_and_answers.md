@@ -5,34 +5,7 @@
 ###Pizza Metrics
 
 ❗ **Note** ❗
-Table 1: **plans**
 
-Customers can choose which plans to join Foodie-Fi when they first sign up.
-
-Basic plan customers have limited access and can only stream their videos and is only available monthly at \$9.90
-
-Pro plan customers have no watch time limits and are able to download videos for offline viewing. 
-Pro plans start at \$19.90 a month or \$199 for an annual subscription.
-
-Customers can sign up to an initial 7 day free trial will automatically continue with the pro monthly subscription plan 
-unless they cancel, downgrade to basic or upgrade to an annual pro plan at any point during the trial.
-
-When customers cancel their Foodie-Fi service - they will have a churn plan record with a null price 
-but their plan will continue until the end of the billing period.
-
-#### The orginal table structure.
-
-````sql
-SELECT *
-FROM plans;
-````
-# Foodie-Fi
-## Questions and Answers
-### by jaime.m.shaker@gmail.com
-
-###Pizza Metrics
-
-❗ **Note** ❗
 Table 1: **plans**
 
 Customers can choose which plans to join Foodie-Fi when they first sign up.
@@ -66,6 +39,7 @@ plan_id|plan_name    |price |
 4|churn        |      |
 
 ❗ **Note** ❗
+
 Table 2: **subscriptions**
 
 Customer subscriptions show the exact date where their specific plan_id starts.
@@ -173,14 +147,14 @@ customer_id|plan_name    |start_date|
 19|pro monthly  |2020-06-29|
 19|pro annual   |2020-08-29|
 
-* Client #1 upgraded to the basic monthly subscription within their 7 day trial period.  
-* Client #2 upgraded to the pro annual subscription within their 7 day trial period.      
-* Client #11 cancelled their subscription within their 7 day trial period.         
-* Client #13 upgraded to the basic monthly subscription within their 7 day trial period and upgraded to pro annual 3 months later.
-* Client #15 upgraded to the pro annual subscription within their 7 day trial period and cancelled the following month.        
-* Client #16 upgraded to the basic monthly subscription after their 7 day trial period and upgraded to pro annual almost 5 months later.         
-* Client #18 upgraded to the pro monthly subscription within their 7 day trial period.        
-* Client #19 upgraded to the pro monthly subscription within their 7 day trial period and upgraded to pro annual 2 months later. 
+* **Client #1**: upgraded to the basic monthly subscription within their 7 day trial period.  
+* **Client #2**: upgraded to the pro annual subscription within their 7 day trial period.      
+* **Client #11**: cancelled their subscription within their 7 day trial period.         
+* **Client #13**: upgraded to the basic monthly subscription within their 7 day trial period and upgraded to pro annual 3 months later.
+* **Client #15**: upgraded to the pro annual subscription within their 7 day trial period and cancelled the following month.        
+* **Client #16**: upgraded to the basic monthly subscription after their 7 day trial period and upgraded to pro annual almost 5 months later.         
+* **Client #18**: upgraded to the pro monthly subscription within their 7 day trial period.        
+* **Client #19**: upgraded to the pro monthly subscription within their 7 day trial period and upgraded to pro annual 2 months later. 
 
 **B. Data Analysis Questions**
 
