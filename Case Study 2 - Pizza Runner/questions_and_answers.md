@@ -695,25 +695,24 @@ Vegetarian|Tomato Sauce, Cheese, Mushrooms, Onions, Peppers, Tomatoes           
 #### 2. What was the most commonly added extra?
 
 ````sql
-WITH most_common_extra AS (
-	SELECT extras,
-		RANK() OVER (
-			ORDER BY count(extras) desc
-		) AS rnk_extras
-	from (
-			SELECT trim(UNNEST(string_to_array(extras, ',')))::numeric AS extras
-			FROM new_customer_orders
-			GROUP BY extras
-		) AS tmp
+WITH get_extras AS (
+	SELECT
+		trim(UNNEST(string_to_array(extras, ',')))::numeric AS extras
+	FROM new_customer_orders
+	GROUP BY extras
+),
+most_common_extra AS (
+	SELECT
+		extras,
+		RANK() OVER (ORDER BY count(extras) desc) AS rnk_extras
+	from
+		get_extras
 	GROUP BY extras
 )
-SELECT topping_name
+SELECT
+	topping_name
 FROM pizza_toppings
-WHERE topping_id = (
-		SELECT extras
-		FROM most_common_extra
-		WHERE rnk_extras = 1
-	);
+WHERE topping_id = (SELECT extras FROM most_common_extra WHERE rnk_extras = 1);
 ````
 
 **Results:**
