@@ -630,6 +630,8 @@ CREATE TEMP TABLE recipe_toppings AS (
 
 -- 1. What are the standard ingredients for each pizza?
 
+-- Table of all toppings
+
 SELECT
 	rt.pizza_name,
 	pt.topping_name
@@ -656,6 +658,32 @@ Vegetarian|Mushrooms   |
 Vegetarian|Onions      |
 Vegetarian|Peppers     |
 Vegetarian|Tomatoes    |
+
+-- Or Flattened list of all toppings per pizza
+
+WITH pizza_toppings_recipe AS (
+	SELECT
+		rt.pizza_name,
+		pt.topping_name
+	FROM recipe_toppings AS rt
+	JOIN pizza_toppings AS pt
+	ON rt.each_topping = pt.topping_id
+	ORDER BY rt.pizza_name
+)
+SELECT
+	pizza_name,
+	string_agg(topping_name, ', ') AS all_toppings
+FROM
+	pizza_toppings_recipe
+GROUP BY
+	pizza_name;
+
+-- Result:
+
+pizza_name|all_toppings                                                         |
+----------+---------------------------------------------------------------------+
+Meatlovers|BBQ Sauce, Pepperoni, Cheese, Salami, Chicken, Bacon, Mushrooms, Beef|
+Vegetarian|Tomato Sauce, Cheese, Mushrooms, Onions, Peppers, Tomatoes           |
 
 -- 2. What was the most commonly added extra?
 
