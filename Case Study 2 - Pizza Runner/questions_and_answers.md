@@ -1007,32 +1007,35 @@ Onions      |            3|
 ````sql
 DROP TABLE IF EXISTS pizza_income;
 CREATE TEMP TABLE pizza_income AS (
-	SELECT sum(total_meatlovers) | sum(total_veggie) AS total_income
-	from (
-			SELECT c.order_id,
-				c.pizza_id,
-				sum(
-					CASE
-						WHEN pizza_id = 1 THEN 12
-						ELSE 0
-					END
-				) AS total_meatlovers,
-				sum(
-					CASE
-						WHEN pizza_id = 2 THEN 10
-						ELSE 0
-					END
-				) AS total_veggie
-			FROM new_customer_orders AS c
-				JOIN new_runner_orders AS r ON r.order_id = c.order_id
-			WHERE r.cancellation IS NULL
-			GROUP BY c.order_id,
-				c.pizza_id,
-				c.extras
-		) AS tmp
-);
-SELECT *
-FROM pizza_income;
+	SELECT
+		sum(total_meatlovers) + sum(total_veggie) AS total_income
+	from
+		(SELECT 
+			c.order_id,
+			c.pizza_id,
+			sum(
+				CASE
+					WHEN pizza_id = 1 THEN 12
+					ELSE 0
+				END
+			) AS total_meatlovers,
+			sum(
+				CASE
+					WHEN pizza_id = 2 THEN 10
+					ELSE 0
+				END
+			) AS total_veggie
+		FROM new_customer_orders AS c
+		JOIN new_runner_orders AS r
+		ON r.order_id = c.order_id
+		WHERE 
+			r.cancellation IS NULL
+		GROUP BY 
+			c.order_id,
+			c.pizza_id,
+			c.extras) AS tmp);
+		
+SELECT * FROM pizza_income;
 ````
 
 **Results:**
@@ -1055,32 +1058,34 @@ CREATE TEMP TABLE get_extras_cost AS (
 		) AS tmp
 	GROUP BY order_id
 );
-SELECT sum(total_meatlovers) | sum(total_veggie) | sum(total_extras) AS total_income
-from (
-		SELECT c.order_id,
-			c.pizza_id,
-			sum(
-				CASE
-					WHEN pizza_id = 1 THEN 12
-					ELSE 0
-				END
-			) AS total_meatlovers,
-			sum(
-				CASE
-					WHEN pizza_id = 2 THEN 10
-					ELSE 0
-				END
-			) AS total_veggie,
-			gec.total_extras
-		FROM new_customer_orders AS c
-			JOIN new_runner_orders AS r ON r.order_id = c.order_id
-			LEFT JOIN get_extras_cost AS gec ON gec.order_id = c.order_id
-		WHERE r.cancellation IS NULL
-		GROUP BY c.order_id,
-			c.pizza_id,
-			c.extras,
-			gec.total_extras
-	) AS tmp
+with calculate_totals as (
+	SELECT 
+		c.order_id,
+		c.pizza_id,
+		sum(
+			CASE
+				WHEN pizza_id = 1 THEN 12
+				ELSE 0
+			END
+		) AS total_meatlovers,
+		sum(
+			CASE
+				WHEN pizza_id = 2 THEN 10
+				ELSE 0
+			END
+		) AS total_veggie,
+		gec.total_extras
+	FROM new_customer_orders AS c
+	JOIN new_runner_orders AS r ON r.order_id = c.order_id
+	LEFT JOIN get_extras_cost AS gec ON gec.order_id = c.order_id
+	WHERE r.cancellation IS NULL
+	GROUP BY c.order_id,
+		c.pizza_id,
+		c.extras,
+		gec.total_extras
+)
+SELECT sum(total_meatlovers) + sum(total_veggie) + sum(total_extras) AS total_income
+FROM calculate_totals;
 ````
 
 **Results:**

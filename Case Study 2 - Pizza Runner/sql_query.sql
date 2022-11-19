@@ -1033,23 +1033,19 @@ total_income|
          
 -- 2. What if there was an additional $1 charge for any pizza extras?
 
-DROP TABLE IF EXISTS get_extras_cost; 
+DROP TABLE IF EXISTS get_extras_cost;
 CREATE TEMP TABLE get_extras_cost AS (
-	SELECT
-		order_id,
+	SELECT order_id,
 		count(each_extra) AS total_extras
-	from
-		(SELECT 
-			order_id,
-			UNNEST(string_to_array(extras, ',')) AS each_extra 
-		FROM new_customer_orders) AS tmp
+	from (
+			SELECT order_id,
+				UNNEST(string_to_array(extras, ',')) AS each_extra
+			FROM new_customer_orders
+		) AS tmp
 	GROUP BY order_id
 );
-
-SELECT
-	sum(total_meatlovers) + sum(total_veggie) + sum(total_extras) AS total_income
-from
-	(SELECT 
+with calculate_totals as (
+	SELECT 
 		c.order_id,
 		c.pizza_id,
 		sum(
@@ -1066,17 +1062,16 @@ from
 		) AS total_veggie,
 		gec.total_extras
 	FROM new_customer_orders AS c
-	JOIN new_runner_orders AS r
-	ON r.order_id = c.order_id
-	LEFT JOIN get_extras_cost AS gec
-	ON gec.order_id = c.order_id
-	WHERE 
-		r.cancellation IS NULL
-	GROUP BY 
-		c.order_id,
+	JOIN new_runner_orders AS r ON r.order_id = c.order_id
+	LEFT JOIN get_extras_cost AS gec ON gec.order_id = c.order_id
+	WHERE r.cancellation IS NULL
+	GROUP BY c.order_id,
 		c.pizza_id,
 		c.extras,
-		gec.total_extras) AS tmp   
+		gec.total_extras
+)
+SELECT sum(total_meatlovers) + sum(total_veggie) + sum(total_extras) AS total_income
+FROM calculate_totals;
     
 -- Results   
 
