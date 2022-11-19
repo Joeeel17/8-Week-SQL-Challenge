@@ -86,7 +86,7 @@ How do we handle missing values?  There are different ways to handle missing val
   	* **Categorical Data**: Mode
 * Backfill/ForwardFill (Using the previous or next value)
 * Interpolate. To infer value from datapoints and/or patterns.
-* Remove missing values.  If the removal percentage if high, this could be unacceptable as it may produce unreliable results.
+* Remove missing values.  If the removal percentage is high, this could be unacceptable as it may produce unreliable results.
   
 For this exercise, the null values will be removed as we are unable to accurately apply a date to the records.
 
