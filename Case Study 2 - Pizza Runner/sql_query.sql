@@ -347,23 +347,26 @@ n_pizzas|
 -- 9. What was the total volume of pizzas ordered for each hour of the day?
 
 SELECT
-	extract(hour FROM order_time::timestamp) AS hour_of_day,
+	extract(hour FROM order_time::timestamp) AS hour_of_day_24h,
+	to_char(order_time::timestamp, 'HH:AM') AS hour_of_day_12h,
 	count(*) AS n_pizzas
 FROM new_customer_orders
 WHERE order_time IS NOT NULL
-GROUP BY hour_of_day
-ORDER BY hour_of_day;
+GROUP BY 
+	hour_of_day_24h,
+	hour_of_day_12h
+ORDER BY hour_of_day_24h;
 
 -- Result:
        
-hour_of_day|n_pizzas|
------------+--------+
-       11.0|       1|
-       13.0|       3|
-       18.0|       3|
-       19.0|       1|
-       21.0|       3|
-       23.0|       3|  
+hour_of_day_24h|hour_of_day_12h|n_pizzas|
+---------------+---------------+--------+
+           11.0|11:AM          |       1|
+           13.0|01:PM          |       3|
+           18.0|06:PM          |       3|
+           19.0|07:PM          |       1|
+           21.0|09:PM          |       3|
+           23.0|11:PM          |       3|  
        
 -- 10. What was the volume of orders for each day of the week?
 
