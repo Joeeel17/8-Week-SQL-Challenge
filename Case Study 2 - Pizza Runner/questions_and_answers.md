@@ -972,18 +972,25 @@ row_id|pizza_name|toppings                                                      
 #### 6. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
 
 ````sql
-SELECT each_ing,
+WITH get_each_ingredient AS (
+	SELECT 
+		row_id,
+		order_id,
+		pizza_name,
+		UNNEST(string_to_array(all_ingredients, ',')) AS each_ing
+	FROM ingredients
+)
+SELECT
+	each_ing,
 	count(each_ing) AS n_ingredients
-from (
-		SELECT row_id,
-			order_id,
-			pizza_name,
-			UNNEST(string_to_array(all_ingredients, ',')) AS each_ing
-		FROM ingredients
-	) AS tmp
-	JOIN new_runner_orders AS r ON r.order_id = tmp.order_id
-WHERE each_ing <> ''
-	AND r.cancellation IS NULL
+from
+	get_each_ingredient AS gei
+JOIN new_runner_orders AS r
+ON r.order_id = gei.order_id
+WHERE 
+	each_ing <> ''
+AND 
+	r.cancellation IS NULL
 GROUP BY each_ing
 ORDER BY n_ingredients DESC;
 ````
