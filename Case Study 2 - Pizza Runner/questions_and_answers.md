@@ -724,24 +724,24 @@ Bacon       |
 #### 3. What was the most common exclusion?
 
 ````sql
-WITH most_common_exclusion AS (
-	SELECT exclusions,
-		RANK() OVER (
-			ORDER BY count(exclusions) desc
-		) AS rnk_exclusions
-	from (
-			SELECT trim(UNNEST(string_to_array(exclusions, ',')))::numeric AS exclusions
-			FROM new_customer_orders
-			GROUP BY exclusions
-		) AS tmp
+WITH get_exclusions AS (
+	SELECT
+		trim(UNNEST(string_to_array(exclusions, ',')))::numeric AS exclusions
+	FROM new_customer_orders
+	GROUP BY exclusions
+),
+most_common_exclusion AS (
+	SELECT
+		exclusions,
+		RANK() OVER (ORDER BY count(exclusions) desc) AS rnk_exclusions
+	from
+		get_exclusions
 	GROUP BY exclusions
 )
-SELECT topping_name
+SELECT
+	topping_name
 FROM pizza_toppings
-WHERE topping_id in (
-		SELECT exclusions
-		FROM most_common_exclusion
-		WHERE rnk_exclusions = 1;
+WHERE topping_id in (SELECT exclusions FROM most_common_exclusion WHERE rnk_exclusions = 1);
 ````
 
 **Results:**
