@@ -868,7 +868,7 @@ CREATE TEMP TABLE ingredients AS (
 		order_id,
 		pizza_name,
 		concat(all_toppings, ',', all_extras) AS all_ingredients
-	from
+	FROM
 		(SELECT
 			c.row_id,
 			c.order_id,
@@ -899,7 +899,7 @@ SELECT
 	row_id,
 	pizza_name,
 	string_agg(new_ing, ',') AS toppings
-from
+FROM
 	(SELECT
 		row_id,
 		pizza_name,
@@ -907,7 +907,7 @@ from
 			WHEN count(each_ing) > 1 THEN concat('2x', each_ing)
 			when each_ing != '' THEN each_ing
 		END AS new_ing
-	from
+	FROM
 		(SELECT 
 			row_id,
 			pizza_name,
@@ -944,18 +944,21 @@ row_id|pizza_name|toppings                                                      
 
 -- 6. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
 
-SELECT
-	each_ing,
-	count(each_ing) AS n_ingredients
-from
-	(SELECT 
+WITH get_each_ingredient AS (
+	SELECT 
 		row_id,
 		order_id,
 		pizza_name,
 		UNNEST(string_to_array(all_ingredients, ',')) AS each_ing
-	FROM ingredients) AS tmp
+	FROM ingredients
+)
+SELECT
+	each_ing,
+	count(each_ing) AS n_ingredients
+from
+	get_each_ingredient AS gei
 JOIN new_runner_orders AS r
-ON r.order_id = tmp.order_id
+ON r.order_id = gei.order_id
 WHERE 
 	each_ing <> ''
 AND 
