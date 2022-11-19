@@ -273,7 +273,6 @@ WITH cte_order_count AS (
 		r.cancellation IS NULL
 	GROUP BY c.order_id
 )
-
 SELECT
 	max(n_orders) AS max_n_orders
 FROM cte_order_count;
@@ -518,7 +517,7 @@ SELECT
 	ceil(avg(distance)) AS avg_distance_rounded_up
 FROM new_runner_orders
 GROUP BY runner_id
-ORDER BY runner_id;       
+ORDER BY runner_id;     
 
 -- Result:
        
@@ -531,16 +530,18 @@ runner_id|avg_distance_rounded_down|avg_distance|avg_distance_rounded_up|
 -- 5. What was the difference between the longest and shortest delivery times for all orders?
 
 SELECT
+	min(duration) AS min_time,
+	max(duration) AS max_time,
 	max(duration) - min(duration) AS time_diff
 FROM new_runner_orders;
        
 -- Result:
        
-time_diff|
----------+
-       30|       
+min_time|max_time|time_diff|
+--------+--------+---------+
+      10|      40|       30|       
        
--- 6. -- What was the average speed for each runner for each delivery and do you notice any trend for these values?
+-- 6. What was the average speed for each runner for each delivery and do you notice any trend for these values?
 
 WITH customer_order_count AS (
 	SELECT
@@ -566,7 +567,7 @@ FROM new_runner_orders AS r
 JOIN customer_order_count AS c
 ON r.order_id = c.order_id
 WHERE r.pickup_time IS NOT NULL
-ORDER BY runner_speed DESC
+ORDER BY runner_speed;
 
 -- Result:
 
@@ -784,15 +785,7 @@ CREATE TEMP TABLE get_extras AS (
 	GROUP BY row_id, order_id, extras
 );
 
-SELECT
-	case
-		WHEN all_exclusions IS NOT NULL AND all_extras IS NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions)
-		WHEN all_exclusions IS NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Extra: ', all_extras)
-		WHEN all_exclusions IS NOT NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions, ' - ', 'Extra: ', all_extras)
-		ELSE pizza_name
-	END AS pizza_type
-from
-	(
+WITH get_exlusions_and_extras AS (
 	SELECT
 		c.row_id,
 		c.order_id,
@@ -828,7 +821,16 @@ from
 		pn.pizza_name,
 		c.exclusions,
 		c.extras
-	ORDER BY c.row_id) AS tmp
+	ORDER BY c.row_id
+)
+SELECT
+	case
+		WHEN all_exclusions IS NOT NULL AND all_extras IS NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions)
+		WHEN all_exclusions IS NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Extra: ', all_extras)
+		WHEN all_exclusions IS NOT NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions, ' - ', 'Extra: ', all_extras)
+		ELSE pizza_name
+	END AS pizza_type
+FROM get_exlusions_and_extras;
 	
 -- Result:
 	
@@ -850,7 +852,9 @@ Meatlovers                                                       |
 Meatlovers - Exclude: BBQ Sauce, Mushrooms - Extra: Bacon, Cheese|
 
 -- 5. Generate an alphabetically ordered comma separated ingredient list for each pizza order from 
--- the customer_orders table and add a 2x in front of any relevant ingredients      
+-- the customer_orders table and add a 2x in front of any relevant ingredients   
+
+-- This query uses the 'get_exclusions' and 'get_extras' temp tables from the previous question.
 
 DROP TABLE IF EXISTS get_toppings;
 CREATE TEMP TABLE get_toppings AS (
@@ -864,7 +868,7 @@ CREATE TEMP TABLE get_toppings AS (
 	GROUP BY row_id, order_id, toppings
 );
 
-DROP TABLE IF EXISTS ingredients; 
+DROP TABLE IF EXISTS ingredients;
 CREATE TEMP TABLE ingredients AS (
 	SELECT
 		row_id,
@@ -908,7 +912,7 @@ FROM
 		pizza_name,
 		CASE
 			WHEN count(each_ing) > 1 THEN concat('2x', each_ing)
-			when each_ing != '' THEN each_ing
+			WHEN each_ing != '' THEN each_ing
 		END AS new_ing
 	FROM
 		(SELECT 

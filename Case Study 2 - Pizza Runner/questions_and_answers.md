@@ -542,15 +542,17 @@ runner_id|avg_distance_rounded_down|avg_distance|avg_distance_rounded_up|
 
 ````sql
 SELECT
+	min(duration) AS min_time,
+	max(duration) AS max_time,
 	max(duration) - min(duration) AS time_diff
 FROM new_runner_orders;
 ````
 
 **Results:**
 
-time_diff|
----------|
-30|
+min_time|max_time|time_diff|
+--------|--------|---------|
+10|      40|       30|
 
 #### 6. What was the difference between the longest and shortest delivery times for all orders?
 
@@ -795,23 +797,14 @@ CREATE TEMP TABLE get_extras AS (
 	GROUP BY row_id, order_id, extras
 );
 
-SELECT
-	-- Use a case statement to concatnate exclusions and extras for each order
-	case
-		WHEN all_exclusions IS NOT NULL AND all_extras IS NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions)
-		WHEN all_exclusions IS NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Extra: ', all_extras)
-		WHEN all_exclusions IS NOT NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions, ' - ', 'Extra: ', all_extras)
-		ELSE pizza_name
-	END AS pizza_type
-from
-	(
+WITH get_exlusions_and_extras AS (
 	SELECT
 		c.row_id,
 		c.order_id,
 		pn.pizza_name,
 		CASE
 			WHEN c.exclusions IS NULL AND c.extras IS NULL THEN NULL
-			ELSE  -- Use string_agg to flatten list of exclusions using a comma delimeter
+			ELSE 
 				(SELECT
 					string_agg((SELECT topping_name FROM pizza_toppings WHERE topping_id = get_exc.single_exclusions), ', ')
 				FROM
@@ -820,7 +813,7 @@ from
 		END AS all_exclusions,
 		CASE
 			WHEN c.exclusions IS NULL AND c.extras IS NULL THEN NULL
-			ELSE -- Use string_agg to flatten list of extras using a comma delimeter
+			ELSE
 				(SELECT
 					string_agg((SELECT topping_name FROM pizza_toppings WHERE topping_id = get_ext.single_extras), ', ')
 				FROM
@@ -840,7 +833,16 @@ from
 		pn.pizza_name,
 		c.exclusions,
 		c.extras
-	ORDER BY c.row_id) AS tmp
+	ORDER BY c.row_id
+)
+SELECT
+	CASE
+		WHEN all_exclusions IS NOT NULL AND all_extras IS NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions)
+		WHEN all_exclusions IS NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Extra: ', all_extras)
+		WHEN all_exclusions IS NOT NULL AND all_extras IS NOT NULL THEN concat(pizza_name, ' - ', 'Exclude: ', all_exclusions, ' - ', 'Extra: ', all_extras)
+		ELSE pizza_name
+	END AS pizza_type
+FROM get_exlusions_and_extras;
 ````
 
 **Results:**
@@ -863,6 +865,8 @@ Meatlovers                                                       |
 Meatlovers - Exclude: BBQ Sauce, Mushrooms - Extra: Bacon, Cheese|
 
 #### 5. Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients 
+
+This query uses the '**get_exclusions**' and '**get_extras**' temp tables from the previous question.
 
 ````sql
 DROP TABLE IF EXISTS get_toppings;
