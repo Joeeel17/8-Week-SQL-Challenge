@@ -1186,13 +1186,18 @@ customer_id|order_id|runner_id|rating|order_time             |pickup_time       
 #### 5. If a Meat Lovers pizza was \$12.00 and Vegetarian \$10.00 fixed prices with no cost for extras and each runner is paid \$0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
 
 ````sql
-SELECT total_income - payout AS profit
-from (
-		SELECT (sum(distance * 2) *.30) AS payout
-		FROM new_runner_orders
-		WHERE cancellation IS NULL
-	) AS tmp,
+WITH total_payout AS (
+	SELECT
+		(sum(distance*2) * .30) AS payout
+	FROM new_runner_orders
+	WHERE cancellation IS NULL
+)
+SELECT
+	total_income - payout AS profit
+from
+	total_payout,
 	pizza_income;
+
 ````
 
 **Results:**
