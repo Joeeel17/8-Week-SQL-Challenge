@@ -31,10 +31,11 @@ total_nodes|
 #### 2. What is the number of nodes per region? 
 
 ````sql
-SELECT r.region_name,
+SELECT 
+	r.region_name,
 	count(DISTINCT cn.node_id) AS node_count
 FROM customer_nodes AS cn
-	JOIN regions AS r ON r.region_id = cn.region_id
+JOIN regions AS r ON r.region_id = cn.region_id
 GROUP BY r.region_name;
 ````
 
@@ -51,10 +52,11 @@ Europe     |         5|
 #### 3. How many customers are allocated to each region?
 
 ````sql
-SELECT r.region_name,
+SELECT 
+	r.region_name,
 	count(DISTINCT cn.customer_id) AS customer_count
 FROM customer_nodes AS cn
-	JOIN regions AS r ON r.region_id = cn.region_id
+JOIN regions AS r ON r.region_id = cn.region_id
 GROUP BY r.region_name;
 ````
 
@@ -74,69 +76,70 @@ Europe     |            88|
 * Note that we will NOT count when the node does not change from one start date to another.
 
 ````sql
-SELECT CEIL(avg(end_date - start_date)) AS rounded_up,
+WITH get_start_and_end_dates as (
+	SELECT
+		customer_id,
+		node_id,
+		start_date,
+		end_date,
+		LAG(node_id) OVER (PARTITION BY customer_id ORDER BY start_date) AS prev_node
+	FROM
+		customer_nodes
+	WHERE 
+		EXTRACT(YEAR FROM end_date) != '9999'
+	ORDER BY
+		customer_id,
+		start_date
+)
+SELECT
+	floor(avg(end_date - start_date)) AS rounded_down,
 	round(avg(end_date - start_date), 1) AS avg_days,
-	floor(avg(end_date - start_date)) AS rounded_down
-FROM (
-		SELECT customer_id,
-			node_id,
-			start_date,
-			end_date,
-			LAG(node_id) OVER (
-				PARTITION BY customer_id
-				ORDER BY start_date
-			) AS prev_node
-		FROM customer_nodes
-		WHERE EXTRACT(
-				YEAR
-				FROM end_date
-			) != '9999'
-		ORDER BY customer_id,
-			start_date
-	) AS tmp
-WHERE prev_node != node_id;
+	CEIL(avg(end_date - start_date)) AS rounded_up
+FROM
+	get_start_and_end_dates
+WHERE
+	prev_node != node_id;
 ````
 
 **Results:**
 
-rounded_up|avg_days|rounded_down|
-----------|--------|------------|
-15|    14.6|          14|
+rounded_down|avg_days|rounded_up|
+------------|--------|----------|
+14|    14.6|        15|
 
 #### 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region?
 
 ````sql
-WITH perc_reallocation AS (
-SELECT
-		region_name,
-		PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY end_date - start_date) AS "50th_perc",
-		PERCENTILE_CONT(0.8) WITHIN GROUP(ORDER BY end_date - start_date) AS "80th_perc",
-		PERCENTILE_CONT(0.95) WITHIN GROUP(ORDER BY end_date - start_date) AS "95th_perc"
-FROM
-		(
+WITH get_all_days AS (
 	SELECT
-			r.region_name,
-			cn.customer_id,
-			cn.node_id,
-			cn.start_date,
-			cn.end_date,
-			LAG(cn.node_id) OVER (PARTITION BY cn.customer_id ORDER BY cn.start_date) AS prev_node
+		r.region_name,
+		cn.customer_id,
+		cn.node_id,
+		cn.start_date,
+		cn.end_date,
+		LAG(cn.node_id) OVER (PARTITION BY cn.customer_id ORDER BY cn.start_date) AS prev_node
 	FROM
-			customer_nodes AS cn
+		customer_nodes AS cn
 	JOIN regions AS r
-		ON
-		r.region_id = cn.region_id
+	ON r.region_id = cn.region_id
 	WHERE 
-			EXTRACT(YEAR
-	FROM
-		cn.end_date) != '9999'
+		EXTRACT(YEAR FROM cn.end_date) != '9999'
 	ORDER BY
-			cn.customer_id,
-			cn.start_date) AS tmp
+		cn.customer_id,
+		cn.start_date
+),
+perc_reallocation AS (
+SELECT
+	region_name,
+	PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY end_date - start_date) AS "50th_perc",
+	PERCENTILE_CONT(0.8) WITHIN GROUP(ORDER BY end_date - start_date) AS "80th_perc",
+	PERCENTILE_CONT(0.95) WITHIN GROUP(ORDER BY end_date - start_date) AS "95th_perc"
+FROM
+	get_all_days
 WHERE
-		prev_node != node_id
+	prev_node != node_id
 GROUP BY 
-		region_name
+	region_name
 )
 SELECT
 	region_name,

@@ -78,12 +78,7 @@ Europe     |            88|
 -- Note that we will exlude data from any record with 9999 end date.
 -- Note that we will NOT count when the node does not change from one start date to another.
 
-SELECT
-	CEIL(avg(end_date - start_date)) AS rounded_up,
-	round(avg(end_date - start_date), 1) AS avg_days,
-	floor(avg(end_date - start_date)) AS rounded_down
-FROM
-	(
+WITH get_start_and_end_dates as (
 	SELECT
 		customer_id,
 		node_id,
@@ -96,26 +91,26 @@ FROM
 		EXTRACT(YEAR FROM end_date) != '9999'
 	ORDER BY
 		customer_id,
-		start_date) AS tmp
+		start_date
+)
+SELECT
+	floor(avg(end_date - start_date)) AS rounded_down,
+	round(avg(end_date - start_date), 1) AS avg_days,
+	CEIL(avg(end_date - start_date)) AS rounded_up
+FROM
+	get_start_and_end_dates
 WHERE
 	prev_node != node_id;
 
 -- Results:
 	
-rounded_up|avg_days|rounded_down|
-----------+--------+------------+
-        15|    14.6|          14|
+rounded_down|avg_days|rounded_up|
+------------+--------+----------+
+          14|    14.6|        15|
         
 -- 5. What is the median, 80th and 95th percentile for this same reallocation days metric for each region?
 
-WITH perc_reallocation AS (
-SELECT
-		region_name,
-		PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY end_date - start_date) AS "50th_perc",
-		PERCENTILE_CONT(0.8) WITHIN GROUP(ORDER BY end_date - start_date) AS "80th_perc",
-		PERCENTILE_CONT(0.95) WITHIN GROUP(ORDER BY end_date - start_date) AS "95th_perc"
-FROM
-		(
+WITH get_all_days AS (
 	SELECT
 			r.region_name,
 			cn.customer_id,
@@ -129,12 +124,19 @@ FROM
 		ON
 		r.region_id = cn.region_id
 	WHERE 
-			EXTRACT(YEAR
-	FROM
-		cn.end_date) != '9999'
+			EXTRACT(YEAR FROM cn.end_date) != '9999'
 	ORDER BY
 			cn.customer_id,
-			cn.start_date) AS tmp
+			cn.start_date
+),
+perc_reallocation AS (
+SELECT
+		region_name,
+		PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY end_date - start_date) AS "50th_perc",
+		PERCENTILE_CONT(0.8) WITHIN GROUP(ORDER BY end_date - start_date) AS "80th_perc",
+		PERCENTILE_CONT(0.95) WITHIN GROUP(ORDER BY end_date - start_date) AS "95th_perc"
+FROM
+		get_all_days
 WHERE
 		prev_node != node_id
 GROUP BY 
