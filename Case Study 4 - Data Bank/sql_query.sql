@@ -292,35 +292,29 @@ April        |            70|
 DROP TABLE IF EXISTS closing_balance;
 
 CREATE TEMP TABLE closing_balance AS (
-SELECT
-	customer_id,
-	txn_amount,
-	date_part('Month', txn_date) AS txn_month,
-	SUM(
-		CASE
-        	WHEN txn_type = 'deposit' THEN txn_amount
-        	ELSE -txn_amount
-              
-		END
-	) AS transaction_amount
-FROM
-	customer_transactions
-GROUP BY
-	customer_id,
-	txn_month,
-	txn_amount
-ORDER BY
-	customer_id
+	SELECT
+		customer_id,
+		txn_amount,
+		date_part('Month', txn_date) AS txn_month,
+		SUM(
+			CASE
+	        	WHEN txn_type = 'deposit' THEN txn_amount
+	        	ELSE -txn_amount  -- Subtract transaction if not a deposit
+	              
+			END
+		) AS transaction_amount
+	FROM
+		customer_transactions
+	GROUP BY
+		customer_id,
+		txn_month,
+		txn_amount
+	ORDER BY
+		customer_id
 );
 
-
-SELECT 
-	customer_id,
-	txn_month,
-	transaction_amount,
-	closing_balance
-from
-	(SELECT customer_id,
+WITH get_all_transactions_per_month AS (
+	SELECT customer_id,
 	       txn_month,
 	       transaction_amount,
 	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance,
@@ -328,7 +322,15 @@ from
 	FROM closing_balance
 	ORDER BY 
 		customer_id,
-		txn_month) AS tmp
+		txn_month
+)
+SELECT 
+	customer_id,
+	txn_month,
+	transaction_amount,
+	closing_balance
+from
+	get_all_transactions_per_month
 WHERE rn = 1
 LIMIT 15;
 
