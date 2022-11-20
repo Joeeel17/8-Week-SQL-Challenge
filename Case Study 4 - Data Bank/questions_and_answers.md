@@ -359,5 +359,42 @@ customer_id|txn_month|transaction_amount|closing_balance|
 
 #### 5. What is the percentage of customers who increase their closing balance by more than 5%?
 
-**To Be Updated...**
+❗ **Note** ❗ I believe this question is rather vague. I answered it as to whether the customers had a  5% increase in thier closing balance from the previous month.  I don't believe this is a correct interpretation of the question.
 
+````sql
+WITH get_all_transactions_per_month AS (
+	SELECT customer_id,
+	       txn_month,
+	       transaction_amount,
+	       sum(transaction_amount) over(PARTITION BY customer_id ORDER BY txn_month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS closing_balance,
+	       row_number() OVER (PARTITION BY customer_id, txn_month ORDER BY txn_month desc) AS rn
+	FROM closing_balance
+	ORDER BY 
+		customer_id,
+		txn_month
+),
+get_last_balance AS (
+	SELECT 
+		customer_id,
+		txn_month,
+		transaction_amount,
+		closing_balance,
+		round(100 * (closing_balance - LAG(closing_balance) over()) / LAG(closing_balance) over()::numeric, 2) AS month_to_month,
+		RANK() OVER (PARTITION BY customer_id ORDER BY txn_month desc) AS rnk
+	from
+		get_all_transactions_per_month
+	WHERE rn = 1
+)
+SELECT
+	round(100 * count(customer_id) / (SELECT count(customer_id) FROM customer_transactions)::NUMERIC, 2) AS over_5_percent_increase
+FROM
+	get_last_balance
+WHERE month_to_month > 5.0
+AND rnk = 1;
+````
+
+**Results:** 
+
+over_5_percent_increase|
+--------------|
+3.12|
