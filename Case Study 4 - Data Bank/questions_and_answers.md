@@ -165,7 +165,8 @@ Europe     |  15.0|           24.0|           28.0|
 #### 1. What is the unique count and total amount for each transaction type?
 
 ````sql
-SELECT DISTINCT txn_type AS transaction_type,
+SELECT 
+	DISTINCT txn_type AS transaction_type,
 	count(*) AS transaction_count,
 	sum(txn_amount) AS total_transactions
 FROM customer_transactions
@@ -174,7 +175,8 @@ GROUP BY txn_type;
 ❗  **Or** ❗
 
 ````sql
-SELECT DISTINCT txn_type AS transaction_type,
+SELECT 
+	DISTINCT txn_type AS transaction_type,
 	count(
 		CASE
 			WHEN txn_type = 'purchase' THEN 1
@@ -206,16 +208,23 @@ withdrawal      |             1580|            793003|
 #### 2. What is the average total historical deposit counts and amounts for all customers?
 
 ````sql
-SELECT round(avg(deposits_count)) AS avg_deposit_count,
+WITH total_deposit_amounts AS (
+	SELECT
+		customer_id,
+		count(*) AS deposits_count,
+		avg(txn_amount) AS total_deposit_amount
+	FROM
+		customer_transactions
+	WHERE
+		txn_type = 'deposit'
+	GROUP BY
+		customer_id
+)
+SELECT
+	round(avg(deposits_count)) AS avg_deposit_count,
 	round(avg(total_deposit_amount)) AS avg_deposit_amount
-FROM (
-		SELECT customer_id,
-			count(*) AS deposits_count,
-			avg(txn_amount) AS total_deposit_amount
-		FROM customer_transactions
-		WHERE txn_type = 'deposit'
-		GROUP BY customer_id
-	) AS tmp;
+FROM
+	total_deposit_amounts;
 ````
 
 **Results:**

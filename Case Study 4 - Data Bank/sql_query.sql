@@ -209,11 +209,7 @@ withdrawal      |             1580|            793003|
 
 -- 2. What is the average total historical deposit counts and amounts for all customers?
 
-SELECT
-	round(avg(deposits_count)) AS avg_deposit_count,
-	round(avg(total_deposit_amount)) AS avg_deposit_amount
-FROM
-	(
+WITH total_deposit_amounts AS (
 	SELECT
 		customer_id,
 		count(*) AS deposits_count,
@@ -223,7 +219,13 @@ FROM
 	WHERE
 		txn_type = 'deposit'
 	GROUP BY
-		customer_id) AS tmp;
+		customer_id
+)
+SELECT
+	round(avg(deposits_count)) AS avg_deposit_count,
+	round(avg(total_deposit_amount)) AS avg_deposit_amount
+FROM
+	total_deposit_amounts;
 
 -- Results:
 		
