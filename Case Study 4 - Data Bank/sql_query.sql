@@ -235,11 +235,7 @@ avg_deposit_count|avg_deposit_amount|
 
 -- 3. For each month - how many Data Bank customers make more than 1 deposit and either 1 purchase or 1 withdrawal in a single month?
 
-SELECT
-	current_month,
-	count(customer_id) AS customer_count
-FROM
-	(
+WITH get_all_transactions_count AS (
 	SELECT
 		DISTINCT customer_id,
 		to_char(txn_date, 'Month') AS current_month,
@@ -265,7 +261,13 @@ FROM
 		customer_transactions
 	GROUP BY
 		customer_id,
-		current_month) AS tmp
+		current_month
+)
+SELECT
+	current_month,
+	count(customer_id) AS customer_count
+FROM
+	get_all_transactions_count
 WHERE
 	deposit_count > 1
 	AND (purchase_count >= 1
