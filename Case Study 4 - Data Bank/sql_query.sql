@@ -8,17 +8,19 @@
  
 -- 1. How many unique nodes are there on the Data Bank system?
 
-SELECT
-	sum(n_nodes) AS total_nodes
-FROM
-	(
+WITH region_node_count AS (
 	SELECT
 		region_id,
 		count(DISTINCT node_id) AS n_nodes
 	FROM
 		customer_nodes
 	GROUP BY
-		region_id) AS tmp;
+		region_id
+)
+SELECT
+	sum(n_nodes) AS total_nodes
+FROM
+	region_node_count;
 
 -- Results:
 
