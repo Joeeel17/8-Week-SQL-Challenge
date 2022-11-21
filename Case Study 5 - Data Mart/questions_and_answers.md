@@ -315,7 +315,7 @@ SELECT calendar_year,
 	demographics,
 	sum(sales) AS sales_per_demographic,
 	/* We can nest aggregate functions inside a window function because it operates as a level above the *group by* 
-	 * aime.m.shaker@gmail.com
+	 jaime.m.shaker@gmail.com
 	 */
 	round(
 		100 * sum(sales) / sum(sum(sales)) OVER (PARTITION BY calendar_year),
@@ -426,7 +426,7 @@ week_number|
 
 #### 1. What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate in actual values and percentage of sales? 
 
-#####1a. What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate in actual values and percentage of sales? 
+#####1a. What is the total sales for the 4 weeks before and after 2020-06-15? 
 
 ````sql
 SELECT CASE
