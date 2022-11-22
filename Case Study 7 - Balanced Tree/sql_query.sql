@@ -434,15 +434,8 @@ category_id|category_name|top_ranking_products        |total_quantity|
 
 -- 6. What is the percentage split of revenue by product for each segment?
 
-SELECT
-	segment_id,
-	segment_name,
-	product_id,
-	product_name,
-	total_revenue,
-	round(100 * (total_revenue / sum(total_revenue)OVER(PARTITION BY segment_id)), 2) AS revenue_percentage
-FROM
-     (SELECT
+WITH get_total_revenue AS (
+	SELECT
 		pd.segment_id,
 		pd.segment_name,
 		pd.product_id,
@@ -458,7 +451,17 @@ FROM
 		pd.segment_id,
 		pd.segment_name
 	ORDER BY
-		segment_id) AS tmp;
+		segment_id
+)
+SELECT
+	segment_id,
+	segment_name,
+	product_id,
+	product_name,
+	total_revenue,
+	round(100 * (total_revenue / sum(total_revenue)OVER(PARTITION BY segment_id)), 2) AS revenue_percentage
+FROM
+    get_total_revenue;
 
 -- Results:
 		

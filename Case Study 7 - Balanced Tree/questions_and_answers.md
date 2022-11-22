@@ -462,36 +462,34 @@ category_id|category_name|top_ranking_products        |total_quantity|
 #### 6. What is the percentage split of revenue by product for each segment?
 
 ````sql
-SELECT segment_id,
+WITH get_total_revenue AS (
+	SELECT
+		pd.segment_id,
+		pd.segment_name,
+		pd.product_id,
+		pd.product_name,
+		round(sum((s.price * s.qty) * (1 - discount::NUMERIC / 100)), 2) AS total_revenue
+	FROM
+		balanced_tree.product_details AS pd
+	JOIN
+		balanced_tree.sales AS s ON s.prod_id = pd.product_id
+	GROUP BY 
+		pd.product_id,
+		pd.product_name,
+		pd.segment_id,
+		pd.segment_name
+	ORDER BY
+		segment_id
+)
+SELECT
+	segment_id,
 	segment_name,
 	product_id,
 	product_name,
 	total_revenue,
-	round(
-		100 * (
-			total_revenue / sum(total_revenue) OVER(PARTITION BY segment_id)
-		),
-		2
-	) AS revenue_percentage
-FROM (
-		SELECT pd.segment_id,
-			pd.segment_name,
-			pd.product_id,
-			pd.product_name,
-			round(
-				sum(
-					(s.price * s.qty) * (1 - discount::NUMERIC / 100)
-				),
-				2
-			) AS total_revenue
-		FROM balanced_tree.product_details AS pd
-			JOIN balanced_tree.sales AS s ON s.prod_id = pd.product_id
-		GROUP BY pd.product_id,
-			pd.product_name,
-			pd.segment_id,
-			pd.segment_name
-		ORDER BY segment_id
-	) AS tmp;
+	round(100 * (total_revenue / sum(total_revenue)OVER(PARTITION BY segment_id)), 2) AS revenue_percentage
+FROM
+    get_total_revenue;
 ````
 
 **Results:**
