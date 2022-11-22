@@ -307,7 +307,7 @@ membership_status|avg_revenue|
 Non-Member       |     452.01|
 Member           |     454.14|
 
-**C.  Transaction Analysis**
+**C.  Product Analysis**
 
 #### 1. What are the top 3 products by total revenue before discount?
 
