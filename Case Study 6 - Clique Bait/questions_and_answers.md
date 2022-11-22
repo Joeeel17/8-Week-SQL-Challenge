@@ -24,13 +24,19 @@ n_users|
 #### 2. How many cookies does each user have on average?
 
 ````sql
-SELECT round(avg(n_cookies), 2) AS avg_cookies
-from (
-		SELECT DISTINCT user_id,
-			count(DISTINCT cookie_id) AS n_cookies
-		FROM clique_bait.users
-		GROUP BY user_id
-	) AS tmp;
+WITH get_all_cookies AS (
+	SELECT 
+		DISTINCT user_id,
+		count(DISTINCT cookie_id) AS n_cookies
+	FROM 
+		clique_bait.users
+	GROUP BY
+		user_id
+)
+SELECT
+	round(avg(n_cookies), 2) AS avg_cookies
+FROM
+	get_all_cookies;
 ````
 
 ❗ Or 
@@ -51,20 +57,23 @@ avg_cookies|
 #### 3. What is the unique number of visits by all users per month?
 
 ````sql
-SELECT visited_month,
+WITH get_all_visits AS (
+	SELECT
+		DISTINCT cookie_id,
+		count(DISTINCT visit_id) AS n_visits,
+		extract('month' FROM event_time) AS visited_month
+	FROM clique_bait.events
+	GROUP BY 
+		cookie_id,
+		visited_month
+)
+SELECT
+	visited_month,
 	sum(n_visits) AS total_visits
-from (
-		SELECT DISTINCT cookie_id,
-			count(DISTINCT visit_id) AS n_visits,
-			extract(
-				'month'
-				FROM event_time
-			) AS visited_month
-		FROM clique_bait.events
-		GROUP BY cookie_id,
-			visited_month
-	) AS tmp
-GROUP BY visited_month
+from
+	get_all_visits
+GROUP BY 
+	visited_month
 ORDER BY visited_month;
 ````
 

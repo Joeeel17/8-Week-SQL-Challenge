@@ -60,19 +60,22 @@ avg_cookies|
        3.56|
        
 -- 3. What is the unique number of visits by all users per month?
- 
-SELECT
-	visited_month,
-	sum(n_visits) AS total_visits
-from
-	(SELECT
+
+WITH get_all_visits AS (
+	SELECT
 		DISTINCT cookie_id,
 		count(DISTINCT visit_id) AS n_visits,
 		extract('month' FROM event_time) AS visited_month
 	FROM clique_bait.events
 	GROUP BY 
 		cookie_id,
-		visited_month) AS tmp
+		visited_month
+)
+SELECT
+	visited_month,
+	sum(n_visits) AS total_visits
+from
+	get_all_visits
 GROUP BY 
 	visited_month
 ORDER BY visited_month;
