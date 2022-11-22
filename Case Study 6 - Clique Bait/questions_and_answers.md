@@ -2,7 +2,7 @@
 ## Questions and Answers
 ### by jaime.m.shaker@gmail.com
 
-**1. Enterprise Relationship Diagram**
+**1. Entity Relationship Diagram**
 
 	Using the following DDL schema details to create an ERD for all the Clique Bait datasets.
 

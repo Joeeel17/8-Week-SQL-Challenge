@@ -5,7 +5,7 @@
 */
 
 /*
-    1. Enterprise Relationship Diagram
+    1. Entity Relationship Diagram
 */
 	Using the following DDL schema details to create an ERD for all the Clique Bait datasets.
 
@@ -29,16 +29,19 @@ n_users|
     
 -- 2. How many cookies does each user have on average?
 
-SELECT
-	round(avg(n_cookies), 2) AS avg_cookies
-from
-	(SELECT 
+WITH get_all_cookies AS (
+	SELECT 
 		DISTINCT user_id,
 		count(DISTINCT cookie_id) AS n_cookies
 	FROM 
 		clique_bait.users
 	GROUP BY
-		user_id) AS tmp
+		user_id
+)
+SELECT
+	round(avg(n_cookies), 2) AS avg_cookies
+FROM
+	get_all_cookies;
 
 -- Or
 		
