@@ -593,7 +593,7 @@ Teal Button Up Shirt - Mens     |        1242|              49.68|
 -- 10. What is the most common combination of at least 1 quantity of any 3 products in a 1 single transaction?
 
 /*
- * This question had me stumped and I was not able to get it quite right.  After some searching and studying, I 
+ * This question had me stumped and I was not able to get it quite right.  After some researching and studying, I 
  * found a great working example done by https://github.com/muryulia/.  By following her example, I was able to understand
  * the logic behind her answer.
  * 
