@@ -102,7 +102,8 @@ week_day  |week_number|month_number|calendar_year|region|platform|segment|age_ba
 #### 1. What day of the week is used for each week_date value?
 
 ````sql
-SELECT DISTINCT date_part('dow', week_day)::int AS day_of_week,
+SELECT 
+	DISTINCT date_part('dow', week_day)::int AS day_of_week,
 	to_char(week_day, 'Day') AS day_of_week_name
 FROM clean_weekly_sales;
 ````
@@ -345,24 +346,30 @@ calendar_year|demographics|sales_per_demographic|percentage|
 #### 8.  Which age_band and demographic values contribute the most to Retail sales?
 
 ````sql
-SELECT demographics,
+WITH get_total_sales_from_all AS (
+	SELECT
+		demographics,
+		age_band,
+		sum(sales) AS total_sales,
+		rank() OVER (ORDER BY sum(sales) desc) AS rnk,
+		round(100 * sum(sales) / sum(sum(sales)) over (), 2) AS percentage
+	FROM 
+		clean_weekly_sales
+	WHERE
+		platform = 'Retail'
+	AND
+		age_band <> 'unknown'
+	GROUP BY 
+		demographics,
+		age_band
+)
+SELECT
+	demographics,
 	age_band,
 	total_sales,
 	percentage
-from (
-		SELECT demographics,
-			age_band,
-			sum(sales) AS total_sales,
-			rank() OVER (
-				ORDER BY sum(sales) desc
-			) AS rnk,
-			round(100 * sum(sales) / sum(sum(sales)) over (), 2) AS percentage
-		FROM clean_weekly_sales
-		WHERE platform = 'Retail'
-			AND age_band <> 'unknown'
-		GROUP BY demographics,
-			age_band
-	) AS tmp
+from
+	get_total_sales_from_all
 WHERE rnk = 1;
 ````
 

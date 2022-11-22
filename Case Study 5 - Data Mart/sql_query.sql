@@ -333,13 +333,8 @@ calendar_year|demographics|sales_per_demographic|percentage|
          
 -- 8.  Which age_band and demographic values contribute the most to Retail sales?
 
-SELECT
-	demographics,
-	age_band,
-	total_sales,
-	percentage
-from
-	(SELECT
+WITH get_total_sales_from_all AS (
+	SELECT
 		demographics,
 		age_band,
 		sum(sales) AS total_sales,
@@ -353,7 +348,15 @@ from
 		age_band <> 'unknown'
 	GROUP BY 
 		demographics,
-		age_band) AS tmp
+		age_band
+)
+SELECT
+	demographics,
+	age_band,
+	total_sales,
+	percentage
+from
+	get_total_sales_from_all
 WHERE rnk = 1;
 
 -- Results:
