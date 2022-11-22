@@ -238,7 +238,7 @@ member_percentage|non_member_percentage|
  
 SELECT
 	member,
-	-- The over clause allows us to nest aggregate functions
+	-- The OVER clause allows us to nest aggregate functions
 	round(100 * (count(DISTINCT txn_id) / sum(count(DISTINCT txn_id)) OVER()), 2) AS percentage_distribution
 FROM
 	balanced_tree.sales
@@ -254,14 +254,8 @@ true  |                  60.20|
                   
 -- 6. What is the average revenue for member transactions and non-member transactions?
 
-SELECT
-	CASE
-		WHEN member = 't' THEN 'Member'
-		ELSE 'Non-Member'
-	END AS membership_status,
-	round(avg(revenue), 2) AS avg_revenue
-from
-	(SELECT
+WITH get_all_revenue AS (
+	SELECT
 		txn_id,
 		member,
 		round(sum((price * qty) * (1 - discount::NUMERIC / 100)), 2) AS revenue
@@ -269,7 +263,16 @@ from
 		balanced_tree.sales
 	GROUP BY
 		txn_id,
-		member) AS tmp
+		member
+)
+SELECT
+	CASE
+		WHEN member = 't' THEN 'Member'
+		ELSE 'Non-Member'
+	END AS membership_status,
+	round(avg(revenue), 2) AS avg_revenue
+from
+	get_all_revenue
 GROUP BY
 	MEMBER;
 	

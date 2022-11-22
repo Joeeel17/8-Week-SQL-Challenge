@@ -277,23 +277,27 @@ true  |                  60.20|
 #### 6. What is the average revenue for member transactions and non-member transactions?
 
 ````sql
-SELECT CASE
+WITH get_all_revenue AS (
+	SELECT
+		txn_id,
+		member,
+		round(sum((price * qty) * (1 - discount::NUMERIC / 100)), 2) AS revenue
+	FROM
+		balanced_tree.sales
+	GROUP BY
+		txn_id,
+		member
+)
+SELECT
+	CASE
 		WHEN member = 't' THEN 'Member'
 		ELSE 'Non-Member'
 	END AS membership_status,
 	round(avg(revenue), 2) AS avg_revenue
-from (
-		SELECT txn_id,
-			member,
-			round(
-				sum((price * qty) * (1 - discount::NUMERIC / 100)),
-				2
-			) AS revenue
-		FROM balanced_tree.sales
-		GROUP BY txn_id,
-			member
-	) AS tmp
-GROUP BY member;
+from
+	get_all_revenue
+GROUP BY
+	MEMBER;
 ````
 
 **Results:**
