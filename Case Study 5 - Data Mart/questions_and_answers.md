@@ -374,7 +374,7 @@ WHERE rnk = 1;
 ````
 
 **Results:**
-** NOTE ** I did not include 'unknown' because they ask for a demographic and age_band
+❗ **NOTE**: I did not include 'unknown' because they ask for a demographic and age_band
 
 demographics|age_band|total_sales|percentage|
 ------------|--------|-----------|----------|
@@ -464,4 +464,4 @@ After      | 2318994169|
 
 #####1b. What is the growth or reduction rate in actual values and percentage of sales? 
 
-
+❗ To be continued....
