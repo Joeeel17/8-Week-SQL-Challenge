@@ -157,15 +157,18 @@ unique_transactions|
 -- I believe this is another oddly worded question.  I interpret this question to ask
 -- "What is the average NUMBER OF unique items purchased per transaction?"
 
-SELECT
-	round(avg(unique_item)) AS avg_number_of_items
-FROM
-	(SELECT
+WITH get_item_count AS (
+	SELECT
 		count(DISTINCT s.prod_id) unique_item
 	FROM
 		balanced_tree.sales AS s
 	GROUP BY
-		s.txn_id) AS tmp;
+		s.txn_id
+)
+SELECT
+	round(avg(unique_item)) AS avg_number_of_items
+FROM
+	get_item_count;
 
 -- Results:
 		

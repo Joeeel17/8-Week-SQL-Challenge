@@ -152,12 +152,18 @@ unique_transactions|
 #### 2. What is the average unique products purchased in each transaction? I believe this is another oddly worded question.  I interpret this question to ask "What is the average NUMBER OF unique items purchased per transaction?"
 
 ````sql
-SELECT round(avg(unique_item)) AS avg_number_of_items
-FROM (
-		SELECT count(DISTINCT s.prod_id) unique_item
-		FROM balanced_tree.sales AS s
-		GROUP BY s.txn_id
-	) AS tmp;
+WITH get_item_count AS (
+	SELECT
+		count(DISTINCT s.prod_id) unique_item
+	FROM
+		balanced_tree.sales AS s
+	GROUP BY
+		s.txn_id
+)
+SELECT
+	round(avg(unique_item)) AS avg_number_of_items
+FROM
+	get_item_count;
 ````
 
 **Results:** 
@@ -250,7 +256,7 @@ or
 
 ````sql
 SELECT member,
-	-- The over clause allows us to nest aggregate functions
+	-- The OVER clause allows us to nest aggregate functions
 	round(
 		100 * (
 			count(DISTINCT txn_id) / sum(count(DISTINCT txn_id)) OVER()
