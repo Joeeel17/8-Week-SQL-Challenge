@@ -443,14 +443,14 @@ WITH runner_time AS (
 		c.order_time,
 		(r.pickup_time - c.order_time) AS runner_arrival_time
 	FROM new_runner_orders AS r
-		JOIN new_customer_orders AS c ON r.order_id = c.order_id
+	JOIN new_customer_orders AS c ON r.order_id = c.order_id
 )
 SELECT runner_id,
 	extract(
 		'minutes'
 		FROM avg(runner_arrival_time)
 	) AS avg_arrival_time
-from runner_time
+FROM runner_time
 GROUP BY runner_id
 ORDER BY runner_id;
 ````
@@ -473,14 +473,11 @@ WITH runner_time AS (
 		c.order_time,
 		(r.pickup_time - c.order_time) AS runner_arrival_time
 	FROM new_runner_orders AS r
-		JOIN new_customer_orders AS c ON r.order_id = c.order_id
+	JOIN new_customer_orders AS c ON r.order_id = c.order_id
 )
 SELECT runner_id,
-	extract(
-		'minutes'
-		FROM avg(runner_arrival_time)
-	) AS avg_arrival_time
-from runner_time
+	extract('minutes' FROM avg(runner_arrival_time)) AS avg_arrival_time
+FROM runner_time
 GROUP BY runner_id
 ORDER BY runner_id;
 ````
@@ -503,7 +500,7 @@ SELECT c.customer_id,
 	round(avg(r.distance), 2) AS avg_distance,
 	ceil(avg(r.distance)) AS avg_distance_rounded_up
 FROM new_runner_orders AS r
-	JOIN new_customer_orders AS c ON c.order_id = r.order_id
+JOIN new_customer_orders AS c ON c.order_id = r.order_id
 GROUP BY customer_id
 ORDER BY customer_id;
 ````
@@ -575,7 +572,8 @@ SELECT c.customer_id,
 	r.duration,
 	round(60 * r.distance / r.duration, 2) AS runner_speed
 FROM new_runner_orders AS r
-	JOIN customer_order_count AS c ON r.order_id = c.order_id
+JOIN customer_order_count AS c 
+ON r.order_id = c.order_id
 WHERE r.pickup_time IS NOT NULL
 ORDER BY runner_speed DESC
 ````
@@ -644,7 +642,8 @@ CREATE TEMP TABLE recipe_toppings AS (
 SELECT rt.pizza_name,
 	pt.topping_name
 FROM recipe_toppings AS rt
-	JOIN pizza_toppings AS pt ON rt.each_topping = pt.topping_id
+JOIN pizza_toppings AS pt 
+ON rt.each_topping = pt.topping_id
 ORDER BY rt.pizza_name;
 ````
 
@@ -708,7 +707,7 @@ most_common_extra AS (
 	SELECT
 		extras,
 		RANK() OVER (ORDER BY count(extras) desc) AS rnk_extras
-	from
+	FROM
 		get_extras
 	GROUP BY extras
 )
@@ -737,7 +736,7 @@ most_common_exclusion AS (
 	SELECT
 		exclusions,
 		RANK() OVER (ORDER BY count(exclusions) desc) AS rnk_exclusions
-	from
+	FROM
 		get_exclusions
 	GROUP BY exclusions
 )
